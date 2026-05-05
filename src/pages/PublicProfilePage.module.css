@@ -1,0 +1,49 @@
+.page {
+  padding: 2.5rem 3rem;
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-size: 48px;
+  font-weight: 600;
+  color: rgba(55, 138, 221, 0.06);
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 2px;
+  user-select: none;
+}
+
+.banner {
+  background: var(--brand-subtle);
+  border: 0.5px solid var(--brand-border);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1rem;
+  font-size: 12px;
+  color: var(--brand-primary);
+}
+
+.topbar {
+  margin-bottom: 1.25rem;
+}
+
+.heading {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
