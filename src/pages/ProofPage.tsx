@@ -13,44 +13,6 @@ export function ProofPage() {
   const [txError, setTxError] = useState('');
   const [isSubmittingTx, setIsSubmittingTx] = useState(false);
   const [unsignedTxCbor, setUnsignedTxCbor] = useState('');
-  const [isGeneratingTx, setIsGeneratingTx] = useState(false);
-
-  const generateUnsignedTx = async () => {
-    if (!connected) {
-      setTxError('Connect a Cardano wallet first from Settings.');
-      return;
-    }
-
-    try {
-      setIsGeneratingTx(true);
-      setTxError('');
-
-      const address = await wallet.getChangeAddress();
-
-      const response = await fetch('http://localhost:3001/api/tx/build', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          address,
-          credentialId: 'cred_demo_001',
-          fileHash: 'a3f9c21b-demo',
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to generate transaction');
-      }
-
-      const data = await response.json();
-      setUnsignedTxCbor(data.unsignedTxCbor);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to generate transaction.';
-      setTxError(message);
-    } finally {
-      setIsGeneratingTx(false);
-    }
-  };
 
   const startUpload = () => {
     if (uploadState === 'uploading') return;
@@ -108,7 +70,7 @@ export function ProofPage() {
       // const unsignedTx = await tx.build();
       // const signedTx = await wallet.signTx(unsignedTx, false);
 
-      const signedTx = await wallet.signTx(unsignedTxCbor.trim(), false);
+      const signedTx = await wallet.signTxReturnFullTx(unsignedTxCbor.trim(), false);
       const hash = await wallet.submitTx(signedTx);
 
       setTxHash(hash);
@@ -171,21 +133,11 @@ export function ProofPage() {
               <span className={styles.certVal}>{txHash || 'Not submitted yet'}</span>
             </div>
 
-            <div style={{ marginTop: '16px', display: 'grid', gap: '12px' }}>
-              <button
-                className={styles.uploadZone}
-                style={{ padding: '12px 16px' }}
-                onClick={generateUnsignedTx}
-                disabled={isGeneratingTx || !connected}
-              >
-                <div className={styles.uploadLabel}>
-                  {isGeneratingTx ? 'Generating...' : '⚙️ Generate Unsigned Tx'}
-                </div>
-              </button>
+              <div style={{ marginTop: '16px', display: 'grid', gap: '12px' }}>
               <textarea
                 value={unsignedTxCbor}
                 onChange={(e) => setUnsignedTxCbor(e.target.value)}
-                placeholder="Click 'Generate Unsigned Tx' or paste CBOR hex here"
+                placeholder="Paste unsigned CBOR hex here"
                 rows={4}
                 style={{
                   width: '100%',
