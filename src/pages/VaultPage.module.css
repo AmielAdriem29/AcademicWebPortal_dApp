@@ -1,5 +1,5 @@
 .page {
-  padding: 1.5rem;
+  padding: 1.5rem 0;
   flex: 1;
   overflow-y: auto;
 }
@@ -9,6 +9,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1.5rem;
+  padding: 0 1.5rem;
 }
 
 .heading {
@@ -26,7 +27,7 @@
   border: none;
   border-radius: var(--radius-md);
   padding: 9px 18px;
-  font-size: 13px;
+  font-size: 22px;
   font-family: var(--font-sans);
   font-weight: 500;
   cursor: pointer;
@@ -38,28 +39,35 @@
 }
 
 .statsRow {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: 15px;
   margin-bottom: 1.5rem;
+  margin-right: 1.5rem;
+  padding: 0 1.5rem;
 }
 
 .stat {
   background: var(--surface-1);
   border-radius: var(--radius-md);
-  padding: 12px 14px;
+  padding: 16px;
+  width: 350px;
+  border: 0.5px solid var(--border-subtle);
 }
 
 .statLabel {
   font-size: 11px;
   color: var(--text-secondary);
   margin-bottom: 4px;
+  text-align: left;
 }
 
 .statValue {
   font-size: 22px;
   font-weight: 500;
   color: var(--text-primary);
+  text-align: left;
 }
 
 .green {
@@ -73,10 +81,13 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 10px;
+  padding: 0 1.5rem;
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 15px;
+  padding: 0 1.5rem;
 }

@@ -9,7 +9,7 @@
 }
 
 .heading {
-  font-size: 16px;
+  font-size: 32px;
   font-weight: 500;
   color: var(--text-primary);
 }
@@ -45,12 +45,12 @@
 }
 
 .uploadIcon {
-  font-size: 28px;
+  font-size: 16px;
   margin-bottom: 8px;
 }
 
 .uploadLabel {
-  font-size: 13px;
+  font-size: 22px;
   color: var(--text-secondary);
 }
 
@@ -91,7 +91,7 @@
 }
 
 .certTitle {
-  font-size: 13px;
+  font-size: 22px;
   font-weight: 500;
   color: var(--status-verified-text);
   margin-bottom: 10px;
