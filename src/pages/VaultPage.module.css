@@ -1,5 +1,5 @@
 .page {
-  padding: 1.5rem 0;
+  padding: 3rem 0;
   flex: 1;
   overflow-y: auto;
   background: #0a0c12;
@@ -9,12 +9,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
-  padding: 0 1.5rem;
+  margin-bottom: 3rem;
+  padding: 0 3rem;
 }
 
 .heading {
-  font-size: 16px;
+  font-size: 36px;
   font-weight: 500;
   color: var(--text-primary);
 }
@@ -22,12 +22,12 @@
 .shareBtn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   background: var(--brand-primary);
   color: #fff;
   border: none;
   border-radius: var(--radius-md);
-  padding: 9px 18px;
+  padding: 16px 32px;
   font-size: 22px;
   font-family: var(--font-sans);
   font-weight: 500;
@@ -40,35 +40,35 @@
 }
 
 .contentArea {
-  width: min(100%, 900px);
-  padding-left: 1.5rem;
+  width: min(100%, 1150px);
+  padding-left: 3rem;
   padding-right: clamp(24px, 5vw, 80px);
 }
 
 .statsRow {
   display: flex;
   flex-wrap: nowrap;
-  gap: 15px;
-  margin-bottom: 1.5rem;
+  gap: 24px;
+  margin-bottom: 3rem;
 }
 
 .stat {
   flex: 1;
   background: var(--surface-1);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 28px;
   border: 0.5px solid var(--border-subtle);
 }
 
 .statLabel {
-  font-size: 11px;
+  font-size: 18px;
   color: var(--text-secondary);
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   text-align: left;
 }
 
 .statValue {
-  font-size: 22px;
+  font-size: 48px;
   font-weight: 500;
   color: var(--text-primary);
   text-align: left;
@@ -79,21 +79,21 @@
 }
 
 .sectionTitle {
-  font-size: 11px;
+  font-size: 18px;
   font-weight: 500;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 24px;
 }
 
 .grid > * {
-  flex: 1 1 calc(50% - 7.5px);
+  flex: 1 1 calc(50% - 12px);
   min-width: 0;
 }
