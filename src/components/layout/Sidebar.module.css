@@ -1,7 +1,7 @@
 .sidebar {
-  width: var(--sidebar-width);
-  background: var(--surface-0);
-  border-right: 0.5px solid var(--border-subtle);
+  width: var(--sidebar-width); /* 260px from your root */
+  background: #0d1117; /* Deep midnight base */
+  border-right: 1px solid rgba(255, 255, 255, 0.03); /* Almost invisible border */
   padding: 1.5rem 0.875rem;
   display: flex;
   flex-direction: column;
@@ -11,72 +11,65 @@
 }
 
 .logo {
-  font-size: 12px;
+  font-family: var(--font-sans); /* Syne for that premium look */
+  font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
-  padding: 0 0.5rem 1.25rem;
-  border-bottom: 0.5px solid var(--border-subtle);
-  margin-bottom: 0.5rem;
-  letter-spacing: 0.3px;
+  color: #ffffff; /* Brighter white for the brand name */
+  padding: 0 0.5rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 1rem;
+  letter-spacing: 1px; /* Increased tracking for a luxury feel */
+  text-transform: uppercase;
 }
 
 .logo span {
-  color: var(--brand-light);
-}
-
-.nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
+  color: var(--brand-light); /* #378ADD */
+  filter: drop-shadow(0 0 8px rgba(55, 138, 221, 0.3)); /* Subtle brand glow */
 }
 
 .navItem {
   width: 100%;
-  padding: 8px 10px;
-  border-radius: var(--radius-md);
-  font-size: 16px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md); /* 10px */
+  font-size: 14px; /* Slightly smaller text feels more professional */
   font-family: var(--font-sans);
-  color: var(--text-secondary);
+  color: var(--text-tertiary); /* Muted #8C959F */
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: background 0.15s, color 0.15s;
+  gap: 12px;
+  transition: all 0.2s ease;
   background: transparent;
   border: none;
-  text-align: left;
 }
 
 .navItem:hover {
-  background: var(--surface-1);
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
 }
 
 .navItem.active {
-  background: var(--brand-subtle);
-  color: var(--brand-primary);
+  background: rgba(55, 138, 221, 0.08); /* Faint blue tint from brand-light */
+  color: #ffffff;
   font-weight: 500;
+  box-shadow: inset 0 0 0 1px rgba(55, 138, 221, 0.2); /* Subtle inner border glow */
 }
 
 .navIcon {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
-  opacity: 0.7;
-  display: flex;
-  align-items: center;
-}
-
-.navIcon svg {
-  width: 100%;
-  height: 100%;
+  opacity: 0.5;
+  transition: opacity 0.2s;
 }
 
 .active .navIcon {
   opacity: 1;
+  color: var(--brand-light);
 }
 
 .bottomNav {
-  border-top: 0.5px solid var(--border-subtle);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   padding-top: 12px;
+  margin-top: auto; /* Pushes settings to the very bottom */
 }

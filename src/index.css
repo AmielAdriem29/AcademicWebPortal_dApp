@@ -7,54 +7,43 @@
 }
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
+
   /* Brand */
-  --brand-primary: #185FA5;
-  --brand-light:   #378ADD;
-  --brand-subtle:  #E6F1FB;
-  --brand-border:  #B5D4F4;
+  --brand-primary: #378ADD;
+  --brand-light:   #60A5FA;
+  --brand-subtle:  rgba(55, 138, 221, 0.1);
 
-  /* Status */
-  --status-verified-bg:   #EAF3DE;
-  --status-verified-text: #3B6D11;
-  --status-pending-bg:    #FAEEDA;
-  --status-pending-text:  #854F0B;
-  --status-revoked-bg:    #FCEBEB;
-  --status-revoked-text:  #A32D2D;
-
-  /* Surface */
-  --surface-0: #ffffff;
-  --surface-1: #F6F8FA;
-  --surface-2: #ECEEF1;
+  /* Surface - The Midnight Palette */
+  --surface-0: #0a0c12; /* Deepest background */
+  --surface-1: #11141d; /* Sidebar background */
+  --surface-2: #1b202b; /* Hover states */
 
   /* Border */
-  --border-subtle:  rgba(0,0,0,0.07);
-  --border-default: rgba(0,0,0,0.12);
+  --border-subtle:  rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.1);
 
   /* Text */
-  --text-primary:   #0D1117;
-  --text-secondary: #57606A;
-  --text-tertiary:  #8C959F;
+  --text-primary:   #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-tertiary:  #475569;
 
-  /* Radius */
+  /* Radius & Font */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
-
-  /* Font */
   --font-sans: 'Syne', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
-
-  /* Sidebar */
   --sidebar-width: 260px;
 }
 
-
 body {
   font-family: var(--font-sans);
-  background: var(--surface-1);
+  background: var(--surface-0);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow: hidden;
 }
 
 button {
@@ -66,23 +55,3 @@ a {
   color: inherit;
   text-decoration: none;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: light;
-    background: var(--surface-1);
-  }
-  body {
-    background: var(--surface-1) !important;
-    color: var(--text-primary) !important;
-  }
-}
-
-html {
-  font-size: 16px;
-}
-
-
-/* 
-#root {
-  zoom: 1.4;
-} */
