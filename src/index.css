@@ -15,9 +15,9 @@
   --brand-subtle:  rgba(55, 138, 221, 0.1);
 
   /* Surface - The Midnight Palette */
-  --surface-0: #0a0c12; /* Deepest background */
-  --surface-1: #11141d; /* Sidebar background */
-  --surface-2: #1b202b; /* Hover states */
+  --surface-0: #080b14;   /* Deepest background */
+  --surface-1: #0d1220;   /* Sidebar background */
+  --surface-2: #131929;   /* Hover states */
 
   /* Border */
   --border-subtle:  rgba(255, 255, 255, 0.05);
