@@ -1,5 +1,5 @@
 import type { Credential } from '../../types';
-import { StatusBadge } from '../ui/StatusBadge';
+import { StatusBadge } from '../ui/StatusBadge.tsx';
 import styles from './CredentialCard.module.css';
 
 interface Props {
