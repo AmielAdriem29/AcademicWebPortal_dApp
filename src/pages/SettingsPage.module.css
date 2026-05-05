@@ -2,6 +2,11 @@
   background: transparent;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  padding-top: 3rem;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .topbar {
@@ -16,12 +21,14 @@
 }
 
 .contentArea {
-  width: min(100%, 1150px);
+  width: min(100%, 850px);
   padding-left: 3rem;
   padding-right: clamp(24px, 8vw, 120px);
   display: flex;
   flex-direction: column;
   gap: 20px;
+  flex: 1;
+  padding-bottom: 3rem;
 }
 
 .card {
