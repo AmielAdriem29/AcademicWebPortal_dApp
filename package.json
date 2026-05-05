@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@meshsdk/react": "^2.0.0-beta.2",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
@@ -25,6 +26,12 @@
     "globals": "^17.5.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",
-    "vite": "^8.0.10"
+    "vite": "^8.0.10",
+    "vite-plugin-node-polyfills": "^0.26.0",
+    "vite-plugin-top-level-await": "^1.4.4",
+    "vite-plugin-wasm": "^3.3.0"
+  },
+  "overrides": {
+    "libsodium-wrappers-sumo": "0.7.15"
   }
 }
