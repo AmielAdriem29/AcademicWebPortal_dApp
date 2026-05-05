@@ -2,8 +2,11 @@
   background: transparent;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  padding: 3rem 0;
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
 }
-
 .watermark {
   position: absolute;
   top: 50%;
@@ -42,7 +45,7 @@
 }
 
 .contentArea {
-  width: min(100%, 1150px);
+  width: min(100%, 1600px);
   padding-left: 3rem;
   padding-right: clamp(24px, 8vw, 120px);
 }
