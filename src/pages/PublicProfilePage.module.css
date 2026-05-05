@@ -1,8 +1,9 @@
 .page {
-  padding: 2.5rem 3rem;
+  padding: 3rem 0;
   flex: 1;
   overflow-y: auto;
   position: relative;
+  background: #0a0c12;
 }
 
 .watermark {
@@ -10,7 +11,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) rotate(-30deg);
-  font-size: 48px;
+  font-size: 64px;
   font-weight: 600;
   color: rgba(55, 138, 221, 0.06);
   pointer-events: none;
@@ -23,27 +24,38 @@
   background: var(--brand-subtle);
   border: 0.5px solid var(--brand-border);
   border-radius: var(--radius-md);
-  padding: 8px 14px;
+  padding: 12px 18px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 1rem;
-  font-size: 12px;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+  font-size: 18px;
   color: var(--brand-primary);
 }
 
 .topbar {
-  margin-bottom: 1.25rem;
+  margin-bottom: 2rem;
 }
 
 .heading {
-  font-size: 16px;
+  font-size: 36px;
   font-weight: 500;
   color: var(--text-primary);
 }
 
+.contentArea {
+  width: min(100%, 1150px);
+  padding-left: 3rem;
+  padding-right: clamp(24px, 8vw, 120px);
+}
+
 .grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.grid > * {
+  flex: 1 1 calc(50% - 12px);
+  min-width: 0;
 }
