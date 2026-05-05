@@ -35,6 +35,14 @@
   --font-sans: 'Syne', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
   --sidebar-width: 260px;
+
+  /* Status */
+  --status-verified-bg:   rgba(34, 197, 94, 0.12);
+  --status-verified-text: #4ade80;
+  --status-pending-bg:    rgba(234, 179, 8, 0.12);
+  --status-pending-text:  #facc15;
+  --status-revoked-bg:    rgba(239, 68, 68, 0.12);
+  --status-revoked-text:  #f87171;
 }
 
 body {
