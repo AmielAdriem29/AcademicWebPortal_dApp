@@ -1,0 +1,97 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  border-radius: inherit;
+}
+
+.modal {
+  background: var(--surface-0);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  width: 320px;
+  border: 0.5px solid var(--border-subtle);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.select {
+  font-size: 12px;
+  font-family: var(--font-sans);
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--border-default);
+  background: var(--surface-1);
+  color: var(--text-primary);
+}
+
+.linkBox {
+  background: var(--surface-1);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  word-break: break-all;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btnOutline,
+.btnPrimary {
+  flex: 1;
+  padding: 8px;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.btnOutline {
+  border: 0.5px solid var(--border-default);
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.btnOutline:hover {
+  background: var(--surface-1);
+}
+
+.btnPrimary {
+  background: var(--brand-primary);
+  color: #fff;
+  border: none;
+}
+
+.btnPrimary:hover {
+  background: #0c447c;
+}
