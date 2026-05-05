@@ -1,45 +1,56 @@
 .page {
-  padding: 2.5rem 3rem;
+  padding: 3rem 0;
   flex: 1;
   overflow-y: auto;
+  background: #0a0c12;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
 }
 
 .topbar {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
+  padding: 0 3rem;
 }
 
 .heading {
-  font-size: 16px;
+  font-size: 36px;
   font-weight: 500;
   color: var(--text-primary);
+}
+
+.contentArea {
+  width: min(100%, 1150px);
+  padding-left: 3rem;
+  padding-right: clamp(24px, 8vw, 120px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .card {
   background: var(--surface-0);
   border: 0.5px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: 1.25rem;
+  padding: 2rem;
 }
 
 .cardTitle {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .cardDesc {
-  font-size: 12px;
+  font-size: 18px;
   color: var(--text-secondary);
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .btn {
-  padding: 7px 16px;
-  font-size: 12px;
+  padding: 12px 24px;
+  font-size: 18px;
   font-family: var(--font-sans);
   border: 0.5px solid var(--border-default);
   border-radius: var(--radius-md);
