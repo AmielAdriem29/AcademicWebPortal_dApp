@@ -1,13 +1,56 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
+import { useWallet } from '@meshsdk/react';
 import styles from './ProofPage.module.css';
 
 type UploadState = 'idle' | 'uploading' | 'done';
 
 export function ProofPage() {
+  const { wallet, connected } = useWallet();
   const [uploadState, setUploadState] = useState<UploadState>('idle');
   const [progress, setProgress] = useState(0);
   const [progressLabel, setProgressLabel] = useState('Anchoring to blockchain...');
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [txHash, setTxHash] = useState('');
+  const [txError, setTxError] = useState('');
+  const [isSubmittingTx, setIsSubmittingTx] = useState(false);
+  const [unsignedTxCbor, setUnsignedTxCbor] = useState('');
+  const [isGeneratingTx, setIsGeneratingTx] = useState(false);
+
+  const generateUnsignedTx = async () => {
+    if (!connected) {
+      setTxError('Connect a Cardano wallet first from Settings.');
+      return;
+    }
+
+    try {
+      setIsGeneratingTx(true);
+      setTxError('');
+
+      const address = await wallet.getChangeAddress();
+
+      const response = await fetch('http://localhost:3001/api/tx/build', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address,
+          credentialId: 'cred_demo_001',
+          fileHash: 'a3f9c21b-demo',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate transaction');
+      }
+
+      const data = await response.json();
+      setUnsignedTxCbor(data.unsignedTxCbor);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to generate transaction.';
+      setTxError(message);
+    } finally {
+      setIsGeneratingTx(false);
+    }
+  };
 
   const startUpload = () => {
     if (uploadState === 'uploading') return;
@@ -15,18 +58,67 @@ export function ProofPage() {
     setProgress(0);
     setProgressLabel('Anchoring to blockchain...');
 
-    let pct = 0;
-    intervalRef.current = setInterval(() => {
-      pct += 2;
-      setProgress(pct);
-      if (pct >= 60 && pct < 90) setProgressLabel('Computing hash...');
-      if (pct >= 90) setProgressLabel('Confirming block...');
-      if (pct >= 100) {
-        clearInterval(intervalRef.current!);
-        setProgressLabel('Anchored successfully');
-        setUploadState('done');
-      }
-    }, 60);
+    // Replaced mock timer progression:
+    // let pct = 0;
+    // intervalRef.current = setInterval(() => {
+    //   pct += 2;
+    //   setProgress(pct);
+    //   if (pct >= 60 && pct < 90) setProgressLabel('Computing hash...');
+    //   if (pct >= 90) setProgressLabel('Confirming block...');
+    //   if (pct >= 100) {
+    //     clearInterval(intervalRef.current!);
+    //     setProgressLabel('Anchored successfully');
+    //     setUploadState('done');
+    //   }
+    // }, 60);
+
+    // Keep a very short UX transition, then enable real chain submit action.
+    setProgress(100);
+    setProgressLabel('Ready to submit transaction');
+    setUploadState('done');
+  };
+
+  const submitAnchorTx = async () => {
+    if (!connected) {
+      setTxError('Connect a Cardano wallet first from Settings.');
+      return;
+    }
+
+    if (!unsignedTxCbor.trim()) {
+      setTxError('Generate or paste unsigned transaction CBOR hex before submitting.');
+      return;
+    }
+
+    try {
+      setIsSubmittingTx(true);
+      setTxError('');
+      setTxHash('');
+
+      // Replaced auto-builder flow (kept for reference due to SDK type mismatch):
+      // const changeAddress = await wallet.getChangeAddress();
+      // const tx = new Transaction({ initiator: wallet })
+      //   .sendLovelace(changeAddress, '1000000')
+      //   .setMetadata(674, {
+      //     app: 'ChainCred',
+      //     action: 'anchor_credential',
+      //     credentialId: 'cred_demo_001',
+      //     fileHash: 'a3f9c21b-demo',
+      //     createdAt: new Date().toISOString(),
+      //   });
+      // const unsignedTx = await tx.build();
+      // const signedTx = await wallet.signTx(unsignedTx, false);
+
+      const signedTx = await wallet.signTx(unsignedTxCbor.trim(), false);
+      const hash = await wallet.submitTx(signedTx);
+
+      setTxHash(hash);
+      setProgressLabel('Anchored successfully');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Transaction submission failed.';
+      setTxError(message);
+    } finally {
+      setIsSubmittingTx(false);
+    }
   };
 
   return (
@@ -74,7 +166,49 @@ export function ProofPage() {
             </div>
             <div className={styles.certRow}>
               <span>Transaction</span>
-              <span className={styles.certVal}>0xd8a1…9f30</span>
+              {/* Replaced mock transaction value: */}
+              {/* <span className={styles.certVal}>0xd8a1…9f30</span> */}
+              <span className={styles.certVal}>{txHash || 'Not submitted yet'}</span>
+            </div>
+
+            <div style={{ marginTop: '16px', display: 'grid', gap: '12px' }}>
+              <button
+                className={styles.uploadZone}
+                style={{ padding: '12px 16px' }}
+                onClick={generateUnsignedTx}
+                disabled={isGeneratingTx || !connected}
+              >
+                <div className={styles.uploadLabel}>
+                  {isGeneratingTx ? 'Generating...' : '⚙️ Generate Unsigned Tx'}
+                </div>
+              </button>
+              <textarea
+                value={unsignedTxCbor}
+                onChange={(e) => setUnsignedTxCbor(e.target.value)}
+                placeholder="Click 'Generate Unsigned Tx' or paste CBOR hex here"
+                rows={4}
+                style={{
+                  width: '100%',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '10px',
+                  color: '#e6eef7',
+                  padding: '10px 12px',
+                  fontSize: '12px',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+                }}
+              />
+              <button
+                className={styles.uploadZone}
+                style={{ maxWidth: '320px', padding: '12px 16px' }}
+                onClick={submitAnchorTx}
+                disabled={isSubmittingTx}
+              >
+                <div className={styles.uploadLabel}>
+                  {isSubmittingTx ? 'Submitting transaction...' : 'Sign & Submit Transaction'}
+                </div>
+              </button>
+              {txError && <span style={{ color: '#ff8a80' }}>{txError}</span>}
             </div>
           </div>
         )}
