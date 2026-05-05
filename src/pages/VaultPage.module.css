@@ -39,7 +39,7 @@
 }
 
 .contentArea {
-  width: min(100%, 1150px);
+  width: min(100%, 1450px);
   padding-left: 3rem;
   padding-right: clamp(24px, 5vw, 80px);
 }
