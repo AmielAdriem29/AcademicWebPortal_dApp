@@ -2,6 +2,9 @@
   background: transparent;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  padding-top: 3rem;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .topbar {
