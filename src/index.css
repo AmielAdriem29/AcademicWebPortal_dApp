@@ -15,9 +15,9 @@
   --brand-subtle:  rgba(55, 138, 221, 0.1);
 
   /* Surface - The Midnight Palette */
-  --surface-0: #080b14;   /* Deepest background */
-  --surface-1: #0d1220;   /* Sidebar background */
-  --surface-2: #131929;   /* Hover states */
+  --surface-0: rgba(13, 18, 32, 0.8);
+  --surface-1: rgba(17, 20, 29, 0.6);
+  --surface-2: rgba(27, 32, 43, 0.5);
 
   /* Border */
   --border-subtle:  rgba(255, 255, 255, 0.05);
@@ -39,11 +39,14 @@
 
 body {
   font-family: var(--font-sans);
-  background: var(--surface-0);
+  background: #060810;
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(55, 138, 221, 0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(24, 95, 165, 0.20) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(99, 153, 34, 0.08) 0%, transparent 60%);
+  background-attachment: fixed;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
-  overflow: hidden;
 }
 
 button {

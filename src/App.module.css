@@ -2,7 +2,6 @@
   display: flex;
   height: 100vh;
   width: 100%;
-  background: var(--surface-1);
   overflow: hidden;
 }
 
@@ -10,5 +9,4 @@
   flex: 1;
   display: flex;
   overflow: hidden;
-  
 }
