@@ -25,26 +25,28 @@ export function VaultPage() {
         </button>
       </div>
 
-      <div className={styles.statsRow}>
-        <div className={styles.stat}>
-          <div className={styles.statLabel}>Total credentials</div>
-          <div className={styles.statValue}>{CREDENTIALS.length}</div>
+      <div className={styles.contentArea}>
+        <div className={styles.statsRow}>
+          <div className={styles.stat}>
+            <div className={styles.statLabel}>Total credentials</div>
+            <div className={styles.statValue}>{CREDENTIALS.length}</div>
+          </div>
+          <div className={styles.stat}>
+            <div className={styles.statLabel}>Verified</div>
+            <div className={`${styles.statValue} ${styles.green}`}>{verified}</div>
+          </div>
+          <div className={styles.stat}>
+            <div className={styles.statLabel}>Recent views</div>
+            <div className={styles.statValue}>{views}</div>
+          </div>
         </div>
-        <div className={styles.stat}>
-          <div className={styles.statLabel}>Verified</div>
-          <div className={`${styles.statValue} ${styles.green}`}>{verified}</div>
-        </div>
-        <div className={styles.stat}>
-          <div className={styles.statLabel}>Recent views</div>
-          <div className={styles.statValue}>{views}</div>
-        </div>
-      </div>
 
-      <div className={styles.sectionTitle}>Diplomas &amp; Certificates</div>
-      <div className={styles.grid}>
-        {CREDENTIALS.map(cred => (
-          <CredentialCard key={cred.id} credential={cred} />
-        ))}
+        <div className={styles.sectionTitle}>Diplomas &amp; Certificates</div>
+        <div className={styles.grid}>
+          {CREDENTIALS.map(cred => (
+            <CredentialCard key={cred.id} credential={cred} />
+          ))}
+        </div>
       </div>
 
       <ShareModal isOpen={modal.isOpen} onClose={modal.close} />

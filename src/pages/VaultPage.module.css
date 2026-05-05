@@ -2,6 +2,7 @@
   padding: 1.5rem 0;
   flex: 1;
   overflow-y: auto;
+  background: #0a0c12;
 }
 
 .topbar {
@@ -38,21 +39,24 @@
   background: #0c447c;
 }
 
+.contentArea {
+  width: min(100%, 900px);
+  padding-left: 1.5rem;
+  padding-right: clamp(24px, 5vw, 80px);
+}
+
 .statsRow {
   display: flex;
   flex-wrap: nowrap;
-  justify-content: flex-start;
   gap: 15px;
   margin-bottom: 1.5rem;
-  margin-right: 1.5rem;
-  padding: 0 1.5rem;
 }
 
 .stat {
+  flex: 1;
   background: var(--surface-1);
   border-radius: var(--radius-md);
   padding: 16px;
-  width: 350px;
   border: 0.5px solid var(--border-subtle);
 }
 
@@ -81,13 +85,15 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 10px;
-  padding: 0 1.5rem;
 }
 
 .grid {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-start;
   gap: 15px;
-  padding: 0 1.5rem;
+}
+
+.grid > * {
+  flex: 1 1 calc(50% - 7.5px);
+  min-width: 0;
 }
