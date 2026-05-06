@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { ACCESS_PERMISSIONS } from '../data/mockData';
-import type { AccessPermission } from '../types';
-import { StatusBadge } from '../components/ui/StatusBadge.tsx';
-import { Toggle } from '../components/ui/Toggle';
+import type { AccessPermission } from '../../../shared/types/index.ts';
+import { ACCESS_PERMISSIONS } from '../../../shared/data/mockData';
+import { StatusBadge } from '../../../shared/components/ui/StatusBadge';
+import { Toggle } from '../../../shared/components/ui/Toggle';
 import styles from './SharePage.module.css';
 
 export function SharePage() {

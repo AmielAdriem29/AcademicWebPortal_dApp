@@ -1,7 +1,7 @@
-import { useModal } from '../hooks/useModal';
-import { CREDENTIALS } from '../data/mockData';
-import { CredentialCard } from '../components/vault/CredentialCard';
-import { ShareModal } from '../components/vault/ShareModal.tsx';
+import { CREDENTIALS } from '../../../shared/data/mockData';
+import { CredentialCard } from '../components/CredentialCard';
+import { ShareModal } from '../components/ShareModal';
+import { useModal } from '../../../shared/hooks/useModal';
 import styles from './VaultPage.module.css';
 
 export function VaultPage() {

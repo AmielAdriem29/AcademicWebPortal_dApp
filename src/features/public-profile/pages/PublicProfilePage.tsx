@@ -1,5 +1,5 @@
-import { PUBLIC_CREDENTIALS } from '../data/mockData';
-import { CredentialCard } from '../components/vault/CredentialCard';
+import { PUBLIC_CREDENTIALS } from '../../../shared/data/mockData';
+import { CredentialCard } from '../../vault/components/CredentialCard';
 import styles from './PublicProfilePage.module.css';
 
 export function PublicProfilePage() {
