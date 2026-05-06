@@ -1,5 +1,5 @@
-import type { Credential } from '../../types';
-import { StatusBadge } from '../ui/StatusBadge.tsx';
+import type { Credential } from '../../../shared/types/index.ts';
+import { StatusBadge } from '../../../shared/components/ui/StatusBadge';
 import styles from './CredentialCard.module.css';
 
 interface Props {

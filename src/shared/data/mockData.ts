@@ -1,4 +1,4 @@
-import type { Credential, AccessPermission } from '../types';
+import type { Credential, AccessPermission } from '../shared/types';
 
 export const CREDENTIALS: Credential[] = [
   {
