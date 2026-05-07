@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { useNavigation } from './shared/hooks/useNavigation';
 import { Sidebar } from './shared/components/layout/Sidebar';
-import { useAuth, AuthProvider, LoginPage, RegisterPage } from './features/auth';
+// App.tsx
+import { AuthProvider } from './features/auth/context/AuthProvider';
+import { useAuth } from './features/auth/context/useAuth';
+import { LoginPage } from './features/auth/pages/LoginPage';
+import { RegisterPage } from './features/auth/pages/RegisterPage';
 import { CredentialProvider } from './features/credentials';
 import { VaultPage } from './features/vault';
 import { SharePage } from './features/share';
@@ -23,24 +27,24 @@ function AppContent() {
   }
 
   return (
-    <div className={styles.app}>
-      <Sidebar active={active} onNavigate={navigate} />
-      <main className={styles.content}>
-        {active === 'vault'        && <VaultPage />}
-        {active === 'share'        && <SharePage />}
-        {active === 'public'       && <PublicProfilePage />}
-        {active === 'settings'     && <SettingsPage />}
-      </main>
-    </div>
+    <CredentialProvider key={user.walletAddress}>
+      <div className={styles.app}>
+        <Sidebar active={active} onNavigate={navigate} />
+        <main className={styles.content}>
+          {active === 'vault'    && <VaultPage />}
+          {active === 'share'    && <SharePage />}
+          {active === 'public'   && <PublicProfilePage />}
+          {active === 'settings' && <SettingsPage />}
+        </main>
+      </div>
+    </CredentialProvider>
   );
 }
 
 export default function App() {
   return (
     <AuthProvider>
-      <CredentialProvider>
-        <AppContent />
-      </CredentialProvider>
+      <AppContent />
     </AuthProvider>
   );
 }

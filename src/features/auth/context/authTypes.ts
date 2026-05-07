@@ -1,0 +1,15 @@
+export interface UserProfile {
+  walletAddress: string;
+  name: string;
+  email: string;
+  institution: string;
+  registeredAt: string;
+}
+
+export interface AuthContextType {
+  user: UserProfile | null;
+  login: (address: string) => UserProfile | null;
+  register: (profile: UserProfile) => void;
+  logout: () => void;
+  isRegistered: (address: string) => boolean;
+}

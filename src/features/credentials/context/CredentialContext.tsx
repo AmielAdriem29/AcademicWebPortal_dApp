@@ -1,8 +1,9 @@
-import { createContext, useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { Credential } from '../../../shared/types';
 import { CREDENTIALS } from '../../../shared/data/mockData';
 import { useAuth } from '../../auth/context/useAuth';
+import { CredentialContext } from './credentialContext';
 
 const VAULT_KEY_PREFIX = 'chaincred_vault_';
 
@@ -29,16 +30,6 @@ function saveCredentials(walletAddress: string, credentials: Credential[]): void
   }
 }
 
-export interface CredentialContextType {
-  credentials: Credential[];
-  isLoading: boolean;
-  addCredential: (credential: Credential) => Promise<void>;
-  updateCredential: (id: string, updates: Partial<Credential>) => Promise<void>;
-  deleteCredential: (id: string) => Promise<void>;
-}
-
-export const CredentialContext = createContext<CredentialContextType | null>(null);
-
 export function CredentialProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
 
@@ -46,11 +37,6 @@ export function CredentialProvider({ children }: { children: ReactNode }) {
     user ? loadCredentials(user.walletAddress) : []
   );
   const [isLoading] = useState(false);
-
-  useEffect(() => {
-    if (!user) { setCredentials([]); return; }
-    setCredentials(loadCredentials(user.walletAddress));
-  }, [user?.walletAddress]);
 
   const persist = useCallback((updater: (prev: Credential[]) => Credential[]) => {
     if (!user) return;
