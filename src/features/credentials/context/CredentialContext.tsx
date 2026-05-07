@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { Credential } from '../../../shared/types';
 import { CREDENTIALS } from '../../../shared/data/mockData';
@@ -37,6 +37,23 @@ export function CredentialProvider({ children }: { children: ReactNode }) {
     user ? loadCredentials(user.walletAddress) : []
   );
   const [isLoading] = useState(false);
+
+  // Re-sync credentials when another tab (e.g. the verify page) updates localStorage
+  useEffect(() => {
+    if (!user) return;
+    const key = vaultKey(user.walletAddress);
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === key && e.newValue) {
+        try {
+          setCredentials(JSON.parse(e.newValue) as Credential[]);
+        } catch {
+          // ignore malformed data
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [user]);
 
   const persist = useCallback((updater: (prev: Credential[]) => Credential[]) => {
     if (!user) return;
