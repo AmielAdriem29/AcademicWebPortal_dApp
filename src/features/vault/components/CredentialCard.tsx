@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Credential } from '../../../shared/types/index.ts';
 import { StatusBadge } from '../../../shared/components/ui/StatusBadge';
 import { useCredentials } from '../../credentials/context/useCredentials';
+import { useAuth } from '../../auth/context/useAuth';
 import { encodeVerifyToken } from '../../../shared/utils/verifyToken';
 import styles from './CredentialCard.module.css';
 
@@ -10,15 +11,17 @@ interface Props {
 }
 
 function VerifyLinkModal({ credential, onClose }: { credential: Credential; onClose: () => void }) {
+  const { user } = useAuth();
+  const [issuedAt] = useState<number>(() => Date.now());
   const token = encodeVerifyToken({
     credentialId: credential.id,
     credentialName: credential.name,
     institution: credential.institution,
     issuedDate: credential.issuedDate,
     sha256Hash: credential.sha256Hash ?? '',
-    ownerName: credential.ownerName ?? '',
-    ownerWallet: credential.ownerWallet ?? '',
-    issuedAt: Date.now(),
+    ownerName: credential.ownerName || user?.name || '',
+    ownerWallet: credential.ownerWallet || user?.walletAddress || '',
+    issuedAt,
   });
 
   const link = `${window.location.origin}/verify/${token}`;

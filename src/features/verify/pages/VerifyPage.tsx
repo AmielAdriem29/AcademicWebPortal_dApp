@@ -1,7 +1,37 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { decodeVerifyToken } from '../../../shared/utils/verifyToken';
 import type { VerifyTokenPayload } from '../../../shared/utils/verifyToken';
+import type { Credential } from '../../../shared/types';
 import styles from './VerifyPage.module.css';
+
+// ── Storage helpers (mirrors CredentialContext key scheme) ────────────────────
+const VAULT_KEY_PREFIX = 'chaincred_vault_';
+
+function updateCredentialInStorage(
+  ownerWallet: string,
+  credentialId: string,
+  updates: Partial<Credential>,
+): void {
+  if (!ownerWallet) {
+    console.warn('updateCredentialInStorage: ownerWallet is empty, cannot update credential', credentialId);
+    return;
+  }
+  try {
+    const key = `${VAULT_KEY_PREFIX}${ownerWallet}`;
+    const raw = localStorage.getItem(key);
+    if (!raw) {
+      console.warn('updateCredentialInStorage: no vault found for wallet', ownerWallet);
+      return;
+    }
+    const credentials = JSON.parse(raw) as Credential[];
+    const updated = credentials.map(c =>
+      c.id === credentialId ? { ...c, ...updates } : c,
+    );
+    localStorage.setItem(key, JSON.stringify(updated));
+  } catch (err) {
+    console.error('Failed to update credential in storage:', err);
+  }
+}
 
 // ── Signature Pad ────────────────────────────────────────────────────────────
 function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) => void }) {
@@ -91,8 +121,14 @@ function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) => void
 type Step = 'form' | 'submitting' | 'success' | 'error' | 'invalid';
 
 export function VerifyPage() {
-  const [payload, setPayload] = useState<VerifyTokenPayload | null>(null);
-  const [step, setStep] = useState<Step>('form');
+  const [payload] = useState<VerifyTokenPayload | null>(() => {
+    const token = window.location.pathname.split('/verify/')[1] ?? '';
+    return decodeVerifyToken(token);
+  });
+  const [step, setStep] = useState<Step>(() => {
+    const token = window.location.pathname.split('/verify/')[1] ?? '';
+    return decodeVerifyToken(token) ? 'form' : 'invalid';
+  });
 
   // Form fields
   const [signeeName, setSigneeName] = useState('');
@@ -102,18 +138,6 @@ export function VerifyPage() {
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const [txHash, setTxHash] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-
-  // Decode token from URL on mount
-  useEffect(() => {
-    const parts = window.location.pathname.split('/verify/');
-    const token = parts[1] ?? '';
-    const decoded = decodeVerifyToken(token);
-    if (!decoded) {
-      setStep('invalid');
-    } else {
-      setPayload(decoded);
-    }
-  }, []);
 
   const canSubmit =
     signeeName.trim() &&
@@ -195,6 +219,14 @@ export function VerifyPage() {
         '',
         `${window.location.pathname}?tx=${hash}&cred=${payload.credentialId}`
       );
+
+      // ── Update the credential's status + txHash in the owner's localStorage ──
+      if (payload.ownerWallet) {
+        updateCredentialInStorage(payload.ownerWallet, payload.credentialId, {
+          status: 'verified',
+          txHash: hash,
+        });
+      }
 
       setTxHash(hash);
       setStep('success');
