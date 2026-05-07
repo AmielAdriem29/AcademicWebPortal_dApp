@@ -1,37 +1,63 @@
-import { createContext, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { Credential } from '../../../shared/types';
 import { CREDENTIALS } from '../../../shared/data/mockData';
+import { useAuth } from '../../auth/context/useAuth';
+import { CredentialContext } from './credentialContext';
 
-// ─── Contract (Issue 1 will implement this with IndexedDB) ───────────────────
-export interface CredentialContextType {
-  credentials: Credential[];
-  isLoading: boolean;
-  addCredential: (credential: Credential) => Promise<void>;
-  updateCredential: (id: string, updates: Partial<Credential>) => Promise<void>;
-  deleteCredential: (id: string) => Promise<void>;
+const VAULT_KEY_PREFIX = 'chaincred_vault_';
+
+function vaultKey(walletAddress: string): string {
+  return `${VAULT_KEY_PREFIX}${walletAddress}`;
 }
 
-export const CredentialContext = createContext<CredentialContextType | null>(null);
+function loadCredentials(walletAddress: string): Credential[] {
+  try {
+    const raw = localStorage.getItem(vaultKey(walletAddress));
+    if (raw) return JSON.parse(raw) as Credential[];
+    localStorage.setItem(vaultKey(walletAddress), JSON.stringify(CREDENTIALS));
+    return CREDENTIALS;
+  } catch {
+    return CREDENTIALS;
+  }
+}
 
-// ─── Lightweight mock implementation (swap for IndexedDB when Issue 1 lands) ─
+function saveCredentials(walletAddress: string, credentials: Credential[]): void {
+  try {
+    localStorage.setItem(vaultKey(walletAddress), JSON.stringify(credentials));
+  } catch {
+    console.error('Failed to persist credentials to localStorage.');
+  }
+}
+
 export function CredentialProvider({ children }: { children: ReactNode }) {
-  const [credentials, setCredentials] = useState<Credential[]>(CREDENTIALS);
+  const { user } = useAuth();
+
+  const [credentials, setCredentials] = useState<Credential[]>(() =>
+    user ? loadCredentials(user.walletAddress) : []
+  );
   const [isLoading] = useState(false);
 
+  const persist = useCallback((updater: (prev: Credential[]) => Credential[]) => {
+    if (!user) return;
+    setCredentials(prev => {
+      const next = updater(prev);
+      saveCredentials(user.walletAddress, next);
+      return next;
+    });
+  }, [user]);
+
   const addCredential = useCallback(async (credential: Credential) => {
-    setCredentials(prev => [credential, ...prev]);
-  }, []);
+    persist(prev => [credential, ...prev]);
+  }, [persist]);
 
   const updateCredential = useCallback(async (id: string, updates: Partial<Credential>) => {
-    setCredentials(prev =>
-      prev.map(c => (c.id === id ? { ...c, ...updates } : c))
-    );
-  }, []);
+    persist(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+  }, [persist]);
 
   const deleteCredential = useCallback(async (id: string) => {
-    setCredentials(prev => prev.filter(c => c.id !== id));
-  }, []);
+    persist(prev => prev.filter(c => c.id !== id));
+  }, [persist]);
 
   return (
     <CredentialContext.Provider value={{ credentials, isLoading, addCredential, updateCredential, deleteCredential }}>

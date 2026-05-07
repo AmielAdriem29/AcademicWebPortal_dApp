@@ -27,17 +27,29 @@ export function LoginPage({ onNavigateRegister }: Props) {
   };
 
   const handleLogin = async () => {
-    if (!connected) return;
+    // Check if wallet object actually exists to satisfy TypeScript
+    // This removes the need for the `as unknown as` cast
+    if (!connected || !wallet) {
+      setError('Wallet is not fully connected yet.');
+      return;
+    }
+    
     setError('');
+    
     try {
-      const w = wallet as unknown as { getChangeAddress: () => Promise<string> };
-      const address = await w.getChangeAddress();
+      // TypeScript now knows 'wallet' is defined and has Mesh methods
+      const addresses = await wallet.getChangeAddress();
+      
+      // Some Mesh versions return an array of addresses from getChangeAddress, 
+      // others return a string. Ensure you are passing a string to your auth context.
+      const address = Array.isArray(addresses) ? addresses[0] : addresses;
+      
       const profile = login(address);
       if (!profile) {
         setError('No account found for this wallet. Please register first.');
       }
     } catch {
-      setError('Could not retrieve wallet address.');
+      setError('Could not retrieve wallet address. Ensure your wallet is unlocked.');
     }
   };
 
