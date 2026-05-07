@@ -25,4 +25,4 @@ export interface AccessPermission {
   enabled: boolean;
 }
 
-export type NavSection = 'vault' | 'share' | 'proof' | 'public' | 'settings';
+export type NavSection = 'vault' | 'share' | 'public' | 'settings';
