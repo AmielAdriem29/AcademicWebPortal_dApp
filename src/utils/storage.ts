@@ -1,27 +1,18 @@
 // utils/storage.ts
-import { createSimpleStorage } from '../shared/utils/simpleStorage';
-import type { SimpleStorage } from '../shared/utils/simpleStorage';
+import { createSimpleStorage } from "../shared/utils/simpleStorage";
+import type { SimpleStorage } from "../shared/utils/simpleStorage";
 
-import { createSimpleFileStorage } from '../shared/utils/simpleFileStorage';
-import type { SimpleFileStorage } from '../shared/utils/simpleFileStorage';
+import { createSimpleFileStorage } from "../shared/utils/simpleFileStorage";
 
 // ----------------------------------------------------------------------
-// 1. Initialize the two underlying storage engines
+// 1. Initialize string storage (localStorage)
 // ----------------------------------------------------------------------
 const stringStorage: SimpleStorage = createSimpleStorage();
-let fileStorage: SimpleFileStorage | null = null;
-
-async function ensureFileStorage(): Promise<SimpleFileStorage> {
-  if (!fileStorage) {
-    fileStorage = await createSimpleFileStorage('CredentialFiles');
-  }
-  return fileStorage;
-}
 
 // ----------------------------------------------------------------------
 // 2. Fixed key for storing the CURRENT active wallet address
 // ----------------------------------------------------------------------
-const CURRENT_WALLET_KEY = 'credvault_current_wallet';
+const CURRENT_WALLET_KEY = "credvault_current_wallet";
 
 export function getCurrentWallet(): string | null {
   return stringStorage.get(CURRENT_WALLET_KEY);
@@ -46,6 +37,7 @@ function getWalletKey(walletAddress: string, suffix: string): string {
 // 4. Delete everything associated with a wallet EXCEPT the current wallet pointer
 // ----------------------------------------------------------------------
 export async function deleteWalletData(walletAddress: string): Promise<void> {
+  // Delete all localStorage keys that start with the wallet's prefix
   const prefix = `credvault_${walletAddress}_`;
   Object.keys(localStorage).forEach((key) => {
     if (key.startsWith(prefix)) {
@@ -53,6 +45,7 @@ export async function deleteWalletData(walletAddress: string): Promise<void> {
     }
   });
 
+  // Delete the wallet's entire IndexedDB database (all files)
   const dbName = `CredentialFiles_${walletAddress}`;
   indexedDB.deleteDatabase(dbName);
 }
@@ -68,17 +61,20 @@ export async function deleteEntireWallet(walletAddress: string): Promise<void> {
 }
 
 // ----------------------------------------------------------------------
-// 6. Credential metadata (stored as JSON string in localStorage)
+// 6. Credential metadata (generic type T)
 // ----------------------------------------------------------------------
-export function saveCredentialsMeta(walletAddress: string, metadata: any[]): void {
-  const key = getWalletKey(walletAddress, 'creds_meta');
+export function saveCredentialsMeta<T = unknown>(
+  walletAddress: string,
+  metadata: T[],
+): void {
+  const key = getWalletKey(walletAddress, "creds_meta");
   stringStorage.set(key, JSON.stringify(metadata));
 }
 
-export function loadCredentialsMeta(walletAddress: string): any[] {
-  const key = getWalletKey(walletAddress, 'creds_meta');
+export function loadCredentialsMeta<T = unknown>(walletAddress: string): T[] {
+  const key = getWalletKey(walletAddress, "creds_meta");
   const raw = stringStorage.get(key);
-  return raw ? JSON.parse(raw) : [];
+  return raw ? (JSON.parse(raw) as T[]) : [];
 }
 
 // ----------------------------------------------------------------------
@@ -87,7 +83,7 @@ export function loadCredentialsMeta(walletAddress: string): any[] {
 export async function saveCredentialFile(
   walletAddress: string,
   credentialId: string,
-  blob: Blob
+  blob: Blob,
 ): Promise<void> {
   const walletDbName = `CredentialFiles_${walletAddress}`;
   const walletFileStorage = await createSimpleFileStorage(walletDbName);
@@ -97,7 +93,7 @@ export async function saveCredentialFile(
 
 export async function loadCredentialFile(
   walletAddress: string,
-  credentialId: string
+  credentialId: string,
 ): Promise<Blob | null> {
   const walletDbName = `CredentialFiles_${walletAddress}`;
   const walletFileStorage = await createSimpleFileStorage(walletDbName);
@@ -107,21 +103,21 @@ export async function loadCredentialFile(
 
 export async function deleteCredentialFile(
   walletAddress: string,
-  credentialId: string
+  credentialId: string,
 ): Promise<void> {
   const walletDbName = `CredentialFiles_${walletAddress}`;
   const walletFileStorage = await createSimpleFileStorage(walletDbName);
   const key = getWalletKey(walletAddress, `file_${credentialId}`);
-  await walletFileStorage.remove(key);   // ← renamed from delete
+  await walletFileStorage.remove(key);
 }
 
 // ----------------------------------------------------------------------
-// 8. Custom string data (any key under the wallet's namespace)
+// 8. Custom string data
 // ----------------------------------------------------------------------
 export function saveCustomString(
   walletAddress: string,
   customKey: string,
-  value: string
+  value: string,
 ): void {
   const fullKey = getWalletKey(walletAddress, `custom_${customKey}`);
   stringStorage.set(fullKey, value);
@@ -129,7 +125,7 @@ export function saveCustomString(
 
 export function loadCustomString(
   walletAddress: string,
-  customKey: string
+  customKey: string,
 ): string | null {
   const fullKey = getWalletKey(walletAddress, `custom_${customKey}`);
   return stringStorage.get(fullKey);
@@ -137,19 +133,19 @@ export function loadCustomString(
 
 export function deleteCustomString(
   walletAddress: string,
-  customKey: string
+  customKey: string,
 ): void {
   const fullKey = getWalletKey(walletAddress, `custom_${customKey}`);
   stringStorage.remove(fullKey);
 }
 
 // ----------------------------------------------------------------------
-// 9. Custom file data (any blob under the wallet's IndexedDB namespace)
+// 9. Custom file data
 // ----------------------------------------------------------------------
 export async function saveCustomFile(
   walletAddress: string,
   customId: string,
-  blob: Blob
+  blob: Blob,
 ): Promise<void> {
   const walletDbName = `CredentialFiles_${walletAddress}`;
   const walletFileStorage = await createSimpleFileStorage(walletDbName);
@@ -159,7 +155,7 @@ export async function saveCustomFile(
 
 export async function loadCustomFile(
   walletAddress: string,
-  customId: string
+  customId: string,
 ): Promise<Blob | null> {
   const walletDbName = `CredentialFiles_${walletAddress}`;
   const walletFileStorage = await createSimpleFileStorage(walletDbName);
@@ -169,10 +165,10 @@ export async function loadCustomFile(
 
 export async function deleteCustomFile(
   walletAddress: string,
-  customId: string
+  customId: string,
 ): Promise<void> {
   const walletDbName = `CredentialFiles_${walletAddress}`;
   const walletFileStorage = await createSimpleFileStorage(walletDbName);
   const key = getWalletKey(walletAddress, `custom_file_${customId}`);
-  await walletFileStorage.remove(key);   // ← renamed from delete
+  await walletFileStorage.remove(key);
 }
