@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import type { AccessPermission } from '../../../shared/types/index.ts';
-import { ACCESS_PERMISSIONS } from '../../../shared/data/mockData';
 import { StatusBadge } from '../../../shared/components/ui/StatusBadge';
 import { Toggle } from '../../../shared/components/ui/Toggle';
 import styles from './SharePage.module.css';
 
 export function SharePage() {
-  const [permissions, setPermissions] = useState<AccessPermission[]>(ACCESS_PERMISSIONS);
+  const [permissions, setPermissions] = useState<AccessPermission[]>([]);
 
   const toggle = (id: string, val: boolean) => {
     setPermissions(prev => prev.map(p => p.id === id ? { ...p, enabled: val } : p));

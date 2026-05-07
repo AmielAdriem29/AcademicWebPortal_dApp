@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { Credential } from '../../../shared/types';
-import { CREDENTIALS } from '../../../shared/data/mockData';
 import { useAuth } from '../../auth/context/useAuth';
 import { CredentialContext } from './credentialContext';
 
@@ -14,11 +13,9 @@ function vaultKey(walletAddress: string): string {
 function loadCredentials(walletAddress: string): Credential[] {
   try {
     const raw = localStorage.getItem(vaultKey(walletAddress));
-    if (raw) return JSON.parse(raw) as Credential[];
-    localStorage.setItem(vaultKey(walletAddress), JSON.stringify(CREDENTIALS));
-    return CREDENTIALS;
+    return raw ? JSON.parse(raw) as Credential[] : [];
   } catch {
-    return CREDENTIALS;
+    return [];
   }
 }
 
