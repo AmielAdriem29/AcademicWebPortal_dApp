@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigation } from './shared/hooks/useNavigation';
 import { Sidebar } from './shared/components/layout/Sidebar';
 import { useAuth, AuthProvider, LoginPage, RegisterPage } from './features/auth';
+import { CredentialProvider } from './features/credentials';
 import { VaultPage } from './features/vault';
 import { SharePage } from './features/share';
 import { ProofPage } from './features/proof';
@@ -39,7 +40,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <CredentialProvider>
+        <AppContent />
+      </CredentialProvider>
     </AuthProvider>
   );
 }

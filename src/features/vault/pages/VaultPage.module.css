@@ -99,3 +99,23 @@
   flex: 1 1 calc(50% - 12px);
   min-width: 0;
 }
+.issuanceBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #0f3d6a;
+  color: var(--text-primary);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  padding: 16px 32px;
+  font-size: 22px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.issuanceBtn:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-subtle);
+}

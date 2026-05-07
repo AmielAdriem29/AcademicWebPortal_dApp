@@ -33,16 +33,6 @@ const NAV_ITEMS: NavItemDef[] = [
     ),
   },
   {
-    id: 'proof',
-    label: 'Proof of Work',
-    icon: (
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" />
-        <path d="M6 6h4M6 9h4M6 12h2" />
-      </svg>
-    ),
-  },
-  {
     id: 'public',
     label: 'Public Profile',
     icon: (
