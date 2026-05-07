@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { CredentialContext } from './CredentialContext';
+import { CredentialContext } from './credentialContext';
 
 export function useCredentials() {
   const ctx = useContext(CredentialContext);
