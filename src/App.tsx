@@ -5,7 +5,6 @@ import { useAuth, AuthProvider, LoginPage, RegisterPage } from './features/auth'
 import { CredentialProvider } from './features/credentials';
 import { VaultPage } from './features/vault';
 import { SharePage } from './features/share';
-import { ProofPage } from './features/proof';
 import { PublicProfilePage } from './features/public-profile';
 import { SettingsPage } from './features/settings';
 import styles from './App.module.css';
@@ -29,7 +28,6 @@ function AppContent() {
       <main className={styles.content}>
         {active === 'vault'        && <VaultPage />}
         {active === 'share'        && <SharePage />}
-        {active === 'proof'        && <ProofPage />}
         {active === 'public'       && <PublicProfilePage />}
         {active === 'settings'     && <SettingsPage />}
       </main>
