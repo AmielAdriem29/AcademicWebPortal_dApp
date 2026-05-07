@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { Credential } from '../../../shared/types/index.ts';
 import { StatusBadge } from '../../../shared/components/ui/StatusBadge';
 import { useCredentials } from '../../credentials/context/useCredentials';
-import { useAuth } from '../../auth/context/useAuth';
 import { encodeVerifyToken } from '../../../shared/utils/verifyToken';
 import styles from './CredentialCard.module.css';
 
@@ -11,7 +10,6 @@ interface Props {
 }
 
 function VerifyLinkModal({ credential, onClose }: { credential: Credential; onClose: () => void }) {
-  const { user } = useAuth();
   const [issuedAt] = useState<number>(() => Date.now());
   const token = encodeVerifyToken({
     credentialId: credential.id,
@@ -19,8 +17,8 @@ function VerifyLinkModal({ credential, onClose }: { credential: Credential; onCl
     institution: credential.institution,
     issuedDate: credential.issuedDate,
     sha256Hash: credential.sha256Hash ?? '',
-    ownerName: credential.ownerName || user?.name || '',
-    ownerWallet: credential.ownerWallet || user?.walletAddress || '',
+    ownerName: credential.ownerName ?? '',
+    ownerWallet: credential.ownerWallet ?? '',
     issuedAt,
   });
 
@@ -72,6 +70,7 @@ export function CredentialCard({ credential }: Props) {
   const [editInstitution, setEditInstitution] = useState(institution);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [hashCopied, setHashCopied] = useState(false);
 
   const handleSave = async () => {
     await updateCredential(id, { name: editName.trim(), institution: editInstitution.trim() });
@@ -80,6 +79,19 @@ export function CredentialCard({ credential }: Props) {
 
   const handleDelete = async () => {
     await deleteCredential(id);
+  };
+
+  // Display the full tx hash truncated, or the short placeholder if it's the sha256: prefix format
+  const isFullHash = txHash && !txHash.startsWith('sha256:') && txHash.length > 20;
+  const displayHash = isFullHash
+    ? `${txHash.slice(0, 16)}…${txHash.slice(-6)}`
+    : txHash;
+
+  const handleHashCopy = () => {
+    if (!isFullHash) return;
+    navigator.clipboard.writeText(txHash);
+    setHashCopied(true);
+    setTimeout(() => setHashCopied(false), 2000);
   };
 
   if (editing) {
@@ -124,7 +136,7 @@ export function CredentialCard({ credential }: Props) {
   }
 
   return (
-    <div className={styles.card}>
+    <div className={`${styles.card} ${status === 'verified' ? styles.verifiedCard : ''}`}>
       {showVerifyModal && (
         <VerifyLinkModal credential={credential} onClose={() => setShowVerifyModal(false)} />
       )}
@@ -144,7 +156,20 @@ export function CredentialCard({ credential }: Props) {
         <StatusBadge status={status} />
       </div>
 
-      <div className={styles.hash}>{txHash}</div>
+      <button
+        className={`${styles.hash} ${isFullHash ? styles.hashClickable : ''}`}
+        onClick={handleHashCopy}
+        title={isFullHash ? (hashCopied ? 'Copied!' : 'Click to copy full hash') : undefined}
+        disabled={!isFullHash}
+      >
+        <span className={styles.hashText}>{displayHash}</span>
+        {isFullHash && (
+          <span className={styles.hashCopyHint}>
+            {hashCopied ? '✓ Copied' : 'Copy'}
+          </span>
+        )}
+      </button>
+
       <div className={styles.date}>
         {extra
           ? `${issuedDate} · ${extra}`
