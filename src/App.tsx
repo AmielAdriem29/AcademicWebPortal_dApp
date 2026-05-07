@@ -7,14 +7,22 @@ import { VaultPage } from './features/vault';
 import { SharePage } from './features/share';
 import { PublicProfilePage } from './features/public-profile';
 import { SettingsPage } from './features/settings';
+import { VerifyPage } from './features/verify';
 import styles from './App.module.css';
 
 type AuthView = 'login' | 'register';
+
+// Render the verify page for any /verify/:token path — no auth, no sidebar
+function isVerifyRoute() {
+  return window.location.pathname.startsWith('/verify/');
+}
 
 function AppContent() {
   const { user } = useAuth();
   const { active, navigate } = useNavigation('vault');
   const [authView, setAuthView] = useState<AuthView>('login');
+
+  if (isVerifyRoute()) return <VerifyPage />;
 
   if (!user) {
     return authView === 'login'
@@ -26,10 +34,10 @@ function AppContent() {
     <div className={styles.app}>
       <Sidebar active={active} onNavigate={navigate} />
       <main className={styles.content}>
-        {active === 'vault'        && <VaultPage />}
-        {active === 'share'        && <SharePage />}
-        {active === 'public'       && <PublicProfilePage />}
-        {active === 'settings'     && <SettingsPage />}
+        {active === 'vault'    && <VaultPage />}
+        {active === 'share'    && <SharePage />}
+        {active === 'public'   && <PublicProfilePage />}
+        {active === 'settings' && <SettingsPage />}
       </main>
     </div>
   );

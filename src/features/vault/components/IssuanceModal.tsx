@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCredentials } from '../../credentials/context/useCredentials';
+import { useAuth } from '../../auth/context/useAuth';
 import type { Credential } from '../../../shared/types';
 import styles from './IssuanceModal.module.css';
 
@@ -188,6 +189,7 @@ function FilePreview({ file, onRemove }: { file: File; onRemove: () => void }) {
 
 export function IssuanceModal({ isOpen, onClose }: Props) {
   const { addCredential } = useCredentials();
+  const { user } = useAuth();
 
   const [step, setStep] = useState<Step>('form');
   const [dragOver, setDragOver] = useState(false);
@@ -258,6 +260,9 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
         txHash: `sha256:${shortHash}`,
         issuedDate: dateStr,
         extra: `${typeLabel} · Awaiting verification`,
+        sha256Hash: fullHash,
+        ownerName: user?.name ?? '',
+        ownerWallet: user?.walletAddress ?? '',
       };
 
       await addCredential(newCredential);
