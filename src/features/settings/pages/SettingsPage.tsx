@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWallet } from "@meshsdk/react";
 import styles from "./SettingsPage.module.css";
 
@@ -192,7 +192,16 @@ function DeleteModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm:
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function SettingsPage() {
-  const { connected, name: walletName, address } = useWallet() as any;
+  const { connected, name: walletName, wallet } = useWallet();
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (connected && wallet) {
+      wallet.getChangeAddress().then(setWalletAddress).catch(() => setWalletAddress(null));
+    } else {
+      setWalletAddress(null);
+    }
+  }, [connected, wallet]);
 
   const [profile, setProfile] = useState<Profile>({
     name: "",
@@ -337,9 +346,9 @@ export function SettingsPage() {
                     <span className={styles.walletLabel}>{walletName}</span>
                     <span className={styles.connectedPill}>Connected</span>
                   </div>
-                  {address && (
+                  {walletAddress && (
                       <span className={styles.walletAddress}>
-                  {String(address).slice(0, 20)}…{String(address).slice(-8)}
+                  {walletAddress.slice(0, 20)}…{walletAddress.slice(-8)}
                 </span>
                   )}
                 </div>
