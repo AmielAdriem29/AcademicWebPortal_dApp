@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useWallet, useWalletList } from '@meshsdk/react';
 import { useAuth } from '../context/useAuth';
-import type { UserProfile } from '../context/AuthContext';
+import type { UserProfile } from '../context/authTypes';
 import styles from './RegisterPage.module.css';
 
 interface Props {

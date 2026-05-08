@@ -1,4 +1,4 @@
-export type CredentialStatus = 'verified' | 'pending' | 'revoked';
+export type CredentialStatus = 'verified' | 'pending' | 'revoked' | 'rejected';
 
 export interface Credential {
   id: string;
@@ -13,6 +13,10 @@ export interface Credential {
   blockNumber?: string;
   issuedDate: string;
   extra?: string;
+  // Verification flow fields
+  sha256Hash?: string;
+  ownerName?: string;
+  ownerWallet?: string;
 }
 
 export interface AccessPermission {
