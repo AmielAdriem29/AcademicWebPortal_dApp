@@ -1,3 +1,5 @@
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+
 .page {
   background: transparent;
   backdrop-filter: blur(20px);
@@ -28,41 +30,478 @@
   flex-direction: column;
   gap: 20px;
   flex: 1;
-  padding-bottom: 3rem;
+  padding-bottom: 4rem;
 }
+
+/* ── Section card ────────────────────────────────────────────────────────── */
 
 .card {
   background: var(--surface-0);
   border: 0.5px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.cardTitle {
-  font-size: 24px;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-}
-
-.cardDesc {
-  font-size: 18px;
+.sectionHeader {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-secondary);
-  margin-bottom: 20px;
+  margin: 0;
 }
 
-.btn {
-  padding: 12px 24px;
-  font-size: 18px;
-  font-family: var(--font-sans);
+/* ── Form fields ─────────────────────────────────────────────────────────── */
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+}
+
+.input {
+  background: var(--surface-1, #131929);
   border: 0.5px solid var(--border-default);
   border-radius: var(--radius-md);
-  background: transparent;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-family: var(--font-sans);
   color: var(--text-primary);
+  transition: border-color 0.15s;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  border-color: #378ADD;
+}
+
+.input::placeholder {
+  color: var(--text-tertiary, #4a5568);
+}
+
+.textarea {
+  background: var(--surface-1, #131929);
+  border: 0.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 15px;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  transition: border-color 0.15s;
+  outline: none;
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+  line-height: 1.55;
+}
+
+.textarea:focus {
+  border-color: #378ADD;
+}
+
+.textarea::placeholder {
+  color: var(--text-tertiary, #4a5568);
+}
+
+/* ── History list ────────────────────────────────────────────────────────── */
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.historyRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.historyFields {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 620px) {
+  .historyFields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.removeBtn {
+  background: none;
+  border: 0.5px solid var(--border-subtle);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.removeBtn:hover {
+  border-color: #e05252;
+  color: #e05252;
+}
+
+.addBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 0.5px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 9px 16px;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  align-self: flex-start;
+}
+
+.addBtn:hover {
+  border-color: #378ADD;
+  color: #378ADD;
+}
+
+.addIcon {
+  font-size: 17px;
+  line-height: 1;
+}
+
+/* ── Wallet & devices ────────────────────────────────────────────────────── */
+
+.walletInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.walletRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.walletLabel {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.connectedPill {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3B6D11;
+  background: #EAF3DE;
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+
+.walletAddress {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: monospace;
+  letter-spacing: 0.02em;
+}
+
+.emptyHint {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.deviceList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ── Save row ────────────────────────────────────────────────────────────── */
+
+.saveRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.saveBtn {
+  padding: 11px 28px;
+  font-size: 15px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  background: #378ADD;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.saveBtn:hover {
+  background: #2d6db5;
+}
+
+.saveBtn:active {
+  transform: scale(0.98);
+}
+
+/* ── Danger zone ─────────────────────────────────────────────────────────── */
+
+.dangerZone {
+  border: 0.5px solid rgba(224, 82, 82, 0.35);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.dangerZoneHeader {
+  background: rgba(224, 82, 82, 0.08);
+  padding: 10px 2rem;
+  border-bottom: 0.5px solid rgba(224, 82, 82, 0.2);
+}
+
+.dangerZoneTitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #e05252;
+}
+
+.dangerZoneBody {
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.dangerZoneLabel {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.dangerZoneDesc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.55;
+  max-width: 480px;
+}
+
+.deleteBtn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  background: transparent;
+  color: #e05252;
+  border: 0.5px solid #e05252;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.deleteBtn:hover {
+  background: #e05252;
+  color: #fff;
+}
+
+/* ── Delete confirm modal ────────────────────────────────────────────────── */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dangerModal {
+  background: #0d1220;
+  border: 0.5px solid rgba(224, 82, 82, 0.3);
+  border-radius: 16px;
+  padding: 40px 36px;
+  width: min(480px, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+}
+
+.dangerIcon {
+  font-size: 32px;
+  color: #e05252;
+  text-align: center;
+}
+
+.dangerTitle {
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  text-align: center;
+}
+
+.dangerBody {
+  font-size: 15px;
+  color: #8C959F;
+  line-height: 1.6;
+  margin: 0;
+  text-align: center;
+}
+
+.dangerConfirmLabel {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 4px 0 0 0;
+  text-align: center;
+}
+
+.dangerConfirmLabel code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 13px;
+  color: #e05252;
+}
+
+.dangerInput {
+  background: #131929;
+  border: 0.5px solid rgba(224, 82, 82, 0.4);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-family: monospace;
+  color: #e05252;
+  outline: none;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  letter-spacing: 0.12em;
+}
+
+.dangerInput::placeholder {
+  color: rgba(224, 82, 82, 0.3);
+  letter-spacing: 0.08em;
+}
+
+.dangerActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.cancelBtn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 0.5px solid var(--border-default);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: background 0.15s;
 }
 
-.btn:hover {
+.cancelBtn:hover {
   background: var(--surface-1);
+}
+
+.deleteConfirmBtn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  background: #e05252;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.deleteConfirmBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.deleteConfirmBtn:not(:disabled):hover {
+  background: #c43a3a;
+}
+
+/* ── Deleted state ───────────────────────────────────────────────────────── */
+
+.deletedState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 3rem;
+}
+
+.deletedIcon {
+  font-size: 48px;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.deletedTitle {
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.deletedSub {
+  font-size: 16px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.6;
+  max-width: 400px;
+  margin: 0;
 }
