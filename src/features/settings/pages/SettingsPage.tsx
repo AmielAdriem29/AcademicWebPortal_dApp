@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useWallet } from "@meshsdk/react";
+import { useAuth } from "../../auth";
 import styles from "./SettingsPage.module.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -13,6 +14,8 @@ interface HistoryEntry {
 
 interface Profile {
   name: string;
+  email: string;
+  institution: string;
   bio: string;
   education: string;
   workHistory: HistoryEntry[];
@@ -23,6 +26,10 @@ interface Profile {
 
 function uid() {
   return Math.random().toString(36).slice(2, 9);
+}
+
+function profileKey(address: string) {
+  return `chaincred_profile_${address}`;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -37,12 +44,14 @@ function Field({
                  onChange,
                  multiline = false,
                  placeholder = "",
+                 type = "text",
                }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   multiline?: boolean;
   placeholder?: string;
+  type?: string;
 }) {
   return (
       <div className={styles.field}>
@@ -58,6 +67,7 @@ function Field({
         ) : (
             <input
                 className={styles.input}
+                type={type}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
@@ -71,63 +81,50 @@ function HistoryList({
                        entries,
                        onAdd,
                        onRemove,
+                       onUpdate,
                        rolePlaceholder,
                        institutionPlaceholder,
                      }: {
   entries: HistoryEntry[];
   onAdd: () => void;
   onRemove: (id: string) => void;
+  onUpdate: (id: string, field: keyof HistoryEntry, val: string) => void;
   rolePlaceholder: string;
   institutionPlaceholder: string;
 }) {
-  const [drafts, setDrafts] = useState<Record<string, HistoryEntry>>({});
-
-  const update = (id: string, field: keyof HistoryEntry, val: string) => {
-    setDrafts((prev) => ({
-      ...prev,
-      [id]: { ...(prev[id] ?? entries.find((e) => e.id === id)!), [field]: val },
-    }));
-  };
-
-  const getDraft = (entry: HistoryEntry): HistoryEntry =>
-      drafts[entry.id] ?? entry;
-
   return (
       <div className={styles.historyList}>
-        {entries.map((entry) => {
-          const d = getDraft(entry);
-          return (
-              <div key={entry.id} className={styles.historyRow}>
-                <div className={styles.historyFields}>
-                  <input
-                      className={styles.input}
-                      value={d.institution}
-                      onChange={(e) => update(entry.id, "institution", e.target.value)}
-                      placeholder={institutionPlaceholder}
-                  />
-                  <input
-                      className={styles.input}
-                      value={d.role}
-                      onChange={(e) => update(entry.id, "role", e.target.value)}
-                      placeholder={rolePlaceholder}
-                  />
-                  <input
-                      className={styles.input}
-                      value={d.period}
-                      onChange={(e) => update(entry.id, "period", e.target.value)}
-                      placeholder="e.g. 2019 – 2023"
-                  />
-                </div>
-                <button
-                    className={styles.removeBtn}
-                    onClick={() => onRemove(entry.id)}
-                    aria-label="Remove"
-                >
-                  ✕
-                </button>
+        {entries.map((entry) => (
+            <div key={entry.id} className={styles.historyRow}>
+              <div className={styles.historyFields}>
+                <input
+                    className={styles.input}
+                    value={entry.institution}
+                    onChange={(e) => onUpdate(entry.id, "institution", e.target.value)}
+                    placeholder={institutionPlaceholder}
+                />
+                <input
+                    className={styles.input}
+                    value={entry.role}
+                    onChange={(e) => onUpdate(entry.id, "role", e.target.value)}
+                    placeholder={rolePlaceholder}
+                />
+                <input
+                    className={styles.input}
+                    value={entry.period}
+                    onChange={(e) => onUpdate(entry.id, "period", e.target.value)}
+                    placeholder="e.g. 2019 – 2023"
+                />
               </div>
-          );
-        })}
+              <button
+                  className={styles.removeBtn}
+                  onClick={() => onRemove(entry.id)}
+                  aria-label="Remove"
+              >
+                ✕
+              </button>
+            </div>
+        ))}
         <button className={styles.addBtn} onClick={onAdd}>
           <span className={styles.addIcon}>+</span> Add entry
         </button>
@@ -193,6 +190,8 @@ function DeleteModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm:
 
 export function SettingsPage() {
   const { connected, name: walletName, wallet } = useWallet();
+  const { user, register } = useAuth();
+
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
   useEffect(() => {
@@ -203,13 +202,42 @@ export function SettingsPage() {
     }
   }, [connected, wallet]);
 
-  const [profile, setProfile] = useState<Profile>({
-    name: "",
-    bio: "",
-    education: "",
-    workHistory: [],
-    academicHistory: [],
+  // Seed from AuthContext (registration data) + any previously saved extended fields
+  const [profile, setProfile] = useState<Profile>(() => {
+    const base: Profile = {
+      name: user?.name ?? "",
+      email: user?.email ?? "",
+      institution: user?.institution ?? "",
+      bio: "",
+      education: "",
+      workHistory: [],
+      academicHistory: [],
+    };
+    // Merge in any extended fields saved under the wallet-scoped key
+    if (user?.walletAddress) {
+      try {
+        const saved = localStorage.getItem(profileKey(user.walletAddress));
+        if (saved) {
+          const extended = JSON.parse(saved);
+          return { ...base, ...extended };
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return base;
   });
+
+  // If the user object loads after mount (e.g. context hydrates async), sync it in
+  useEffect(() => {
+    if (!user) return;
+    setProfile((prev) => ({
+      ...prev,
+      name: prev.name || user.name,
+      email: prev.email || user.email,
+      institution: prev.institution || user.institution,
+    }));
+  }, [user]);
 
   const [saved, setSaved] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -221,36 +249,62 @@ export function SettingsPage() {
   const addWork = () =>
       setProfile((p) => ({
         ...p,
-        workHistory: [
-          ...p.workHistory,
-          { id: uid(), institution: "", role: "", period: "" },
-        ],
+        workHistory: [...p.workHistory, { id: uid(), institution: "", role: "", period: "" }],
       }));
 
   const removeWork = (id: string) =>
+      setProfile((p) => ({ ...p, workHistory: p.workHistory.filter((e) => e.id !== id) }));
+
+  const updateWork = (id: string, field: keyof HistoryEntry, val: string) =>
       setProfile((p) => ({
         ...p,
-        workHistory: p.workHistory.filter((e) => e.id !== id),
+        workHistory: p.workHistory.map((e) => (e.id === id ? { ...e, [field]: val } : e)),
       }));
 
   const addAcademic = () =>
       setProfile((p) => ({
         ...p,
-        academicHistory: [
-          ...p.academicHistory,
-          { id: uid(), institution: "", role: "", period: "" },
-        ],
+        academicHistory: [...p.academicHistory, { id: uid(), institution: "", role: "", period: "" }],
       }));
 
   const removeAcademic = (id: string) =>
+      setProfile((p) => ({ ...p, academicHistory: p.academicHistory.filter((e) => e.id !== id) }));
+
+  const updateAcademic = (id: string, field: keyof HistoryEntry, val: string) =>
       setProfile((p) => ({
         ...p,
-        academicHistory: p.academicHistory.filter((e) => e.id !== id),
+        academicHistory: p.academicHistory.map((e) => (e.id === id ? { ...e, [field]: val } : e)),
       }));
 
   const handleSave = () => {
-    // Persist to localStorage (blockchain submission would go here)
-    localStorage.setItem("profile", JSON.stringify(profile));
+    // 1. Update the AuthContext user record (name, email, institution)
+    if (user) {
+      register({
+        ...user,
+        name: profile.name,
+        email: profile.email,
+        institution: profile.institution,
+      });
+    }
+
+    // 2. Save extended fields (bio, education, history) under wallet-scoped key
+    const address = user?.walletAddress ?? walletAddress;
+    if (address) {
+      localStorage.setItem(
+          profileKey(address),
+          JSON.stringify({
+            bio: profile.bio,
+            education: profile.education,
+            workHistory: profile.workHistory,
+            academicHistory: profile.academicHistory,
+            // also persist these so they survive a reload even if auth lags
+            name: profile.name,
+            email: profile.email,
+            institution: profile.institution,
+          }),
+      );
+    }
+
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -258,7 +312,6 @@ export function SettingsPage() {
   const handleDelete = () => {
     localStorage.clear();
     sessionStorage.clear();
-    // Blockchain nullification call would fire here
     setDeleteOpen(false);
     setDeleted(true);
   };
@@ -280,7 +333,6 @@ export function SettingsPage() {
 
   return (
       <div className={styles.page}>
-        {/* ── Top bar ── */}
         <div className={styles.topbar}>
           <h2 className={styles.heading}>Settings</h2>
         </div>
@@ -296,6 +348,21 @@ export function SettingsPage() {
                   value={profile.name}
                   onChange={set("name")}
                   placeholder="Your full name"
+              />
+              <Field
+                  label="Email"
+                  value={profile.email}
+                  onChange={set("email")}
+                  placeholder="you@example.com"
+                  type="email"
+              />
+            </div>
+            <div className={styles.fieldGrid}>
+              <Field
+                  label="Institution"
+                  value={profile.institution}
+                  onChange={set("institution")}
+                  placeholder="Your university or company"
               />
               <Field
                   label="Current education"
@@ -320,6 +387,7 @@ export function SettingsPage() {
                 entries={profile.workHistory}
                 onAdd={addWork}
                 onRemove={removeWork}
+                onUpdate={updateWork}
                 institutionPlaceholder="Company"
                 rolePlaceholder="Role / title"
             />
@@ -332,6 +400,7 @@ export function SettingsPage() {
                 entries={profile.academicHistory}
                 onAdd={addAcademic}
                 onRemove={removeAcademic}
+                onUpdate={updateAcademic}
                 institutionPlaceholder="Institution"
                 rolePlaceholder="Degree / programme"
             />
@@ -360,15 +429,8 @@ export function SettingsPage() {
 
             <SectionHeader label="Active sessions" />
             <div className={styles.deviceList}>
-              <DeviceRow
-                  label="Chrome · macOS"
-                  sub="Last active just now"
-                  active
-              />
-              <DeviceRow
-                  label="Safari · iPhone 15"
-                  sub="Last active 2 hours ago"
-              />
+              <DeviceRow label="Chrome · macOS" sub="Last active just now" active />
+              <DeviceRow label="Safari · iPhone 15" sub="Last active 2 hours ago" />
             </div>
           </section>
 
@@ -392,10 +454,7 @@ export function SettingsPage() {
                   a nullification record to the Cardano blockchain.
                 </p>
               </div>
-              <button
-                  className={styles.deleteBtn}
-                  onClick={() => setDeleteOpen(true)}
-              >
+              <button className={styles.deleteBtn} onClick={() => setDeleteOpen(true)}>
                 Delete account
               </button>
             </div>

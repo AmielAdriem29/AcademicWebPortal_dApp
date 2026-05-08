@@ -27,78 +27,70 @@ export function LoginPage({ onNavigateRegister }: Props) {
   };
 
   const handleLogin = async () => {
-    // Check if wallet object actually exists to satisfy TypeScript
-    // This removes the need for the `as unknown as` cast
-    if (!connected || !wallet) {
-      setError('Wallet is not fully connected yet.');
-      return;
-    }
-    
+    if (!connected || !wallet) return;
     setError('');
     
     try {
-      // TypeScript now knows 'wallet' is defined and has Mesh methods
-      const addresses = await wallet.getChangeAddress();
-      
-      // Some Mesh versions return an array of addresses from getChangeAddress, 
-      // others return a string. Ensure you are passing a string to your auth context.
-      const address = Array.isArray(addresses) ? addresses[0] : addresses;
-      
+      const address = await wallet.getChangeAddress();
+      if (!address) {
+        setError('Could not retrieve wallet address. Try reconnecting.');
+        return;
+      }
       const profile = login(address);
       if (!profile) {
         setError('No account found for this wallet. Please register first.');
       }
     } catch {
-      setError('Could not retrieve wallet address. Ensure your wallet is unlocked.');
+      setError('Could not retrieve wallet address. Try reconnecting.');
     }
   };
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <div className={styles.logo}>⬡ <span>ChainCred</span></div>
-        <h1 className={styles.heading}>Welcome back</h1>
-        <p className={styles.sub}>Connect your Cardano wallet to sign in</p>
+      <div className={styles.page}>
+        <div className={styles.card}>
+          <div className={styles.logo}>⬡ <span>ChainCred</span></div>
+          <h1 className={styles.heading}>Welcome back</h1>
+          <p className={styles.sub}>Connect your Cardano wallet to sign in</p>
 
-        {!connected ? (
-          <div className={styles.walletList}>
-            {wallets.length === 0 ? (
-              <p className={styles.empty}>
-                No Cardano wallets detected.{' '}
-                <a href="https://namiwallet.io" target="_blank" rel="noreferrer">Install Nami →</a>
-              </p>
-            ) : (
-              wallets.map(w => (
-                <button
-                  key={w.id}
-                  className={styles.walletBtn}
-                  onClick={() => handleConnect(w.id)}
-                  disabled={connecting}
-                >
-                  <img src={w.icon} alt={w.name} className={styles.walletIcon} />
-                  <span>{w.name}</span>
+          {!connected ? (
+              <div className={styles.walletList}>
+                {wallets.length === 0 ? (
+                    <p className={styles.empty}>
+                      No Cardano wallets detected.{' '}
+                      <a href="https://namiwallet.io" target="_blank" rel="noreferrer">Install Nami →</a>
+                    </p>
+                ) : (
+                    wallets.map(w => (
+                        <button
+                            key={w.id}
+                            className={styles.walletBtn}
+                            onClick={() => handleConnect(w.id)}
+                            disabled={connecting}
+                        >
+                          <img src={w.icon} alt={w.name} className={styles.walletIcon} />
+                          <span>{w.name}</span>
+                        </button>
+                    ))
+                )}
+              </div>
+          ) : (
+              <div className={styles.connectedState}>
+                <div className={styles.connectedBadge}>✓ Wallet Connected</div>
+                <button className={styles.btnPrimary} onClick={handleLogin}>
+                  Sign In with Wallet
                 </button>
-              ))
-            )}
-          </div>
-        ) : (
-          <div className={styles.connectedState}>
-            <div className={styles.connectedBadge}>✓ Wallet Connected</div>
-            <button className={styles.btnPrimary} onClick={handleLogin}>
-              Sign In with Wallet
+              </div>
+          )}
+
+          {error && <p className={styles.error}>{error}</p>}
+
+          <div className={styles.footer}>
+            Don't have an account?{' '}
+            <button className={styles.linkBtn} onClick={onNavigateRegister}>
+              Register here
             </button>
           </div>
-        )}
-
-        {error && <p className={styles.error}>{error}</p>}
-
-        <div className={styles.footer}>
-          Don't have an account?{' '}
-          <button className={styles.linkBtn} onClick={onNavigateRegister}>
-            Register here
-          </button>
         </div>
       </div>
-    </div>
   );
 }
