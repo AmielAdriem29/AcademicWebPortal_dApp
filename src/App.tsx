@@ -25,8 +25,12 @@ function AppContent() {
   const { user } = useAuth();
   const { active, navigate } = useNavigation('vault');
   const [authView, setAuthView] = useState<AuthView>('login');
+  const shareParams = new URLSearchParams(window.location.search);
+  const isShareLink = Boolean(shareParams.get('wallet') && shareParams.get('token'));
 
   if (isVerifyRoute()) return <VerifyPage />;
+
+  if (isShareLink) return <PublicProfilePage />;
 
   if (!user) {
     return authView === 'login'
