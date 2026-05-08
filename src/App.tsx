@@ -6,7 +6,7 @@ import { AuthProvider } from './features/auth/context/AuthProvider';
 import { useAuth } from './features/auth/context/useAuth';
 import { LoginPage } from './features/auth/pages/LoginPage';
 import { RegisterPage } from './features/auth/pages/RegisterPage';
-import { CredentialProvider } from './features/credentials';
+import { CredentialProvider } from './features/credentials/context/CredentialContext.tsx';
 import { VaultPage } from './features/vault';
 import { SharePage } from './features/share';
 import { PublicProfilePage } from './features/public-profile';
