@@ -29,4 +29,15 @@ export interface AccessPermission {
   enabled: boolean;
 }
 
+export type ShareLinkStatus = 'active' | 'revoked';
+
+export interface ShareLinkRecord {
+  walletAddress: string;
+  token: string;
+  recipientName: string;
+  createdAt: string;
+  lastViewedAt?: string;
+  status: ShareLinkStatus;
+}
+
 export type NavSection = 'vault' | 'share' | 'public' | 'settings';

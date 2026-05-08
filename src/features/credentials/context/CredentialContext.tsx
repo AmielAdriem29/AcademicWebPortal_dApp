@@ -74,7 +74,7 @@ export function CredentialProvider({ children }: { children: ReactNode }) {
   }, [persist]);
 
   return (
-    <CredentialContext.Provider value={{ credentials, isLoading, addCredential, updateCredential, deleteCredential }}>
+    <CredentialContext.Provider value={{ wallet: user?.walletAddress ?? null, credentials, isLoading, addCredential, updateCredential, deleteCredential }}>
       {children}
     </CredentialContext.Provider>
   );
