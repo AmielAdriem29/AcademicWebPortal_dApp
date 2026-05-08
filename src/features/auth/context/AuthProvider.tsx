@@ -1,30 +1,16 @@
-import { createContext, useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
-
-export interface UserProfile {
-  walletAddress: string;
-  name: string;
-  email: string;
-  institution: string;
-  registeredAt: string;
-}
-
-export interface AuthContextType {
-  user: UserProfile | null;
-  login: (address: string) => UserProfile | null;
-  register: (profile: UserProfile) => void;
-  logout: () => void;
-  isRegistered: (address: string) => boolean;
-}
-
-export const AuthContext = createContext<AuthContextType | null>(null);
+import { AuthContext } from './authContext';
+// Import these from your types file; do not re-declare UserProfile here
+import type { UserProfile } from './authTypes';
 
 const STORAGE_KEY = 'chaincred_users';
 const SESSION_KEY = 'chaincred_session';
 
 function getUsers(): Record<string, UserProfile> {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : {};
   } catch {
     return {};
   }
@@ -40,10 +26,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  const isRegistered = (address: string) => !!getUsers()[address];
+  const isRegistered = (address: string) => {
+    return Object.prototype.hasOwnProperty.call(getUsers(), address);
+  };
 
   const login = (address: string): UserProfile | null => {
-    const profile = getUsers()[address] ?? null;
+    const profile = getUsers()[address] || null;
     if (profile) {
       setUser(profile);
       localStorage.setItem(SESSION_KEY, JSON.stringify(profile));
@@ -64,8 +52,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(SESSION_KEY);
   };
 
+  // Memoizing the value prevents unnecessary re-renders of all consumers
+  const value = useMemo(() => ({
+    user,
+    login,
+    register,
+    logout,
+    isRegistered
+  }), [user]);
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isRegistered }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

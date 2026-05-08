@@ -2,10 +2,63 @@ import { useState } from 'react';
 import type { Credential } from '../../../shared/types/index.ts';
 import { StatusBadge } from '../../../shared/components/ui/StatusBadge';
 import { useCredentials } from '../../credentials/context/useCredentials';
+import { encodeVerifyToken } from '../../../shared/utils/verifyToken';
 import styles from './CredentialCard.module.css';
 
 interface Props {
   credential: Credential;
+}
+
+function VerifyLinkModal({ credential, onClose }: { credential: Credential; onClose: () => void }) {
+  const [issuedAt] = useState<number>(() => Date.now());
+  const token = encodeVerifyToken({
+    credentialId: credential.id,
+    credentialName: credential.name,
+    institution: credential.institution,
+    issuedDate: credential.issuedDate,
+    sha256Hash: credential.sha256Hash ?? '',
+    ownerName: credential.ownerName ?? '',
+    ownerWallet: credential.ownerWallet ?? '',
+    issuedAt,
+  });
+
+  const link = `${window.location.origin}/verify/${token}`;
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(link);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className={styles.modalBackdrop} onClick={onClose}>
+      <div className={styles.verifyModal} onClick={e => e.stopPropagation()}>
+        <div className={styles.verifyModalHeader}>
+          <div>
+            <div className={styles.verifyModalTitle}>Send for Verification</div>
+            <div className={styles.verifyModalSub}>Share this link with {credential.institution}</div>
+          </div>
+          <button className={styles.closeBtn} onClick={onClose}>✕</button>
+        </div>
+
+        <div className={styles.verifyModalBody}>
+          <div className={styles.verifyInfo}>
+            <span className={styles.verifyInfoIcon}>📋</span>
+            <span>The recipient opens this link, fills in their details, draws their signature, and submits. Their confirmation is anchored to Cardano.</span>
+          </div>
+
+          <div className={styles.linkBox}>
+            <span className={styles.linkText}>{link}</span>
+          </div>
+
+          <button className={styles.copyBtn} onClick={handleCopy}>
+            {copied ? '✓ Copied!' : 'Copy Link'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function CredentialCard({ credential }: Props) {
@@ -16,6 +69,8 @@ export function CredentialCard({ credential }: Props) {
   const [editName, setEditName] = useState(name);
   const [editInstitution, setEditInstitution] = useState(institution);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [hashCopied, setHashCopied] = useState(false);
 
   const handleSave = async () => {
     await updateCredential(id, { name: editName.trim(), institution: editInstitution.trim() });
@@ -24,6 +79,19 @@ export function CredentialCard({ credential }: Props) {
 
   const handleDelete = async () => {
     await deleteCredential(id);
+  };
+
+  // Display the full tx hash truncated, or the short placeholder if it's the sha256: prefix format
+  const isFullHash = txHash && !txHash.startsWith('sha256:') && txHash.length > 20;
+  const displayHash = isFullHash
+    ? `${txHash.slice(0, 16)}…${txHash.slice(-6)}`
+    : txHash;
+
+  const handleHashCopy = () => {
+    if (!isFullHash) return;
+    navigator.clipboard.writeText(txHash);
+    setHashCopied(true);
+    setTimeout(() => setHashCopied(false), 2000);
   };
 
   if (editing) {
@@ -68,7 +136,10 @@ export function CredentialCard({ credential }: Props) {
   }
 
   return (
-    <div className={styles.card}>
+    <div className={`${styles.card} ${status === 'verified' ? styles.verifiedCard : ''}`}>
+      {showVerifyModal && (
+        <VerifyLinkModal credential={credential} onClose={() => setShowVerifyModal(false)} />
+      )}
       <div className={styles.top}>
         <div className={styles.meta}>
           <div
@@ -85,7 +156,20 @@ export function CredentialCard({ credential }: Props) {
         <StatusBadge status={status} />
       </div>
 
-      <div className={styles.hash}>{txHash}</div>
+      <button
+        className={`${styles.hash} ${isFullHash ? styles.hashClickable : ''}`}
+        onClick={handleHashCopy}
+        title={isFullHash ? (hashCopied ? 'Copied!' : 'Click to copy full hash') : undefined}
+        disabled={!isFullHash}
+      >
+        <span className={styles.hashText}>{displayHash}</span>
+        {isFullHash && (
+          <span className={styles.hashCopyHint}>
+            {hashCopied ? '✓ Copied' : 'Copy'}
+          </span>
+        )}
+      </button>
+
       <div className={styles.date}>
         {extra
           ? `${issuedDate} · ${extra}`
@@ -97,7 +181,12 @@ export function CredentialCard({ credential }: Props) {
       {status !== 'verified' && (
         <div className={styles.cardActions}>
           {status === 'pending' && (
-            <button className={styles.actionBtn} onClick={() => setEditing(true)}>Edit</button>
+            <>
+              <button className={styles.actionBtnVerify} onClick={() => setShowVerifyModal(true)}>
+                Send for Verification
+              </button>
+              <button className={styles.actionBtn} onClick={() => setEditing(true)}>Edit</button>
+            </>
           )}
           <button className={`${styles.actionBtn} ${styles.actionBtnDanger}`} onClick={() => setConfirmDelete(true)}>Delete</button>
         </div>

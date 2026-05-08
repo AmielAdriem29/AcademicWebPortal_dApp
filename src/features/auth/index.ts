@@ -1,5 +1,5 @@
-export { AuthProvider } from './context/AuthContext';
-export type { UserProfile } from './context/AuthContext';
+// index.ts
+export { AuthProvider } from './context/AuthProvider';
+export { AuthContext } from './context/authContext'; 
 export { useAuth } from './context/useAuth';
-export { LoginPage } from './pages/LoginPage';
-export { RegisterPage } from './pages/RegisterPage';
+export type { UserProfile, AuthContextType } from './context/authTypes';
