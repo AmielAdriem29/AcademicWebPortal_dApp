@@ -2,6 +2,7 @@ import { createContext } from 'react';
 import type { Credential } from '../../../shared/types';
 
 export interface CredentialContextType {
+  wallet: string | null;
   credentials: Credential[];
   isLoading: boolean;
   addCredential: (credential: Credential) => Promise<void>;
