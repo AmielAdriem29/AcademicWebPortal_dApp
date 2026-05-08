@@ -3,18 +3,6 @@ import { useWallet } from "@meshsdk/react";
 import { useAuth } from "../../auth";
 import styles from "./SettingsPage.module.css";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface Profile {
-    name: string;
-    email: string;
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function profileKey(address: string) {
-    return `chaincred_profile_${address}`;
-}
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SectionHeader({ label }: { label: string }) {
@@ -22,12 +10,12 @@ function SectionHeader({ label }: { label: string }) {
 }
 
 function Field({
-                   label,
-                   value,
-                   onChange,
-                   placeholder = "",
-                   type = "text",
-               }: {
+    label,
+    value,
+    onChange,
+    placeholder = "",
+    type = "text",
+}: {
     label: string;
     value: string;
     onChange: (v: string) => void;
@@ -59,8 +47,7 @@ function DeleteModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm:
                 <h2 className={styles.dangerTitle}>Delete account?</h2>
                 <p className={styles.dangerBody}>
                     This permanently wipes all profile data from local storage{" "}
-                    <strong>and</strong> submits a blockchain nullification record. This
-                    action cannot be undone.
+                    <strong>and</strong> submits a blockchain nullification record.
                 </p>
                 <p className={styles.dangerConfirmLabel}>
                     Type <code>DELETE</code> to confirm
@@ -93,10 +80,13 @@ function DeleteModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm:
 
 export function SettingsPage() {
     const { connected, name: walletName, wallet } = useWallet();
-    const { user, register } = useAuth();
+    const { user, logout } = useAuth();
 
     const [walletAddress, setWalletAddress] = useState<string | null>(null);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [deleted, setDeleted] = useState(false);
 
+    // Fetch wallet address
     useEffect(() => {
         const addressPromise = connected && wallet
             ? wallet.getChangeAddress()
@@ -107,49 +97,15 @@ export function SettingsPage() {
             .catch(() => setWalletAddress(null));
     }, [connected, wallet]);
 
-    const [profileEdits, setProfileEdits] = useState<Partial<Profile>>(() => {
-        if (user?.walletAddress) {
-            try {
-                const saved = localStorage.getItem(profileKey(user.walletAddress));
-                if (saved) return JSON.parse(saved) as Partial<Profile>;
-            } catch {
-                // ignore
-            }
+    // Handle redirect after deletion using standard browser navigation
+    useEffect(() => {
+        if (deleted) {
+            const timer = setTimeout(() => {
+                window.location.href = "/login";
+            }, 2000);
+            return () => clearTimeout(timer);
         }
-        return {};
-    });
-
-    // Derived — merges persisted edits over live user defaults; no effect needed
-    const profile: Profile = {
-        name: profileEdits.name ?? user?.name ?? "",
-        email: profileEdits.email ?? user?.email ?? "",
-    };
-
-    const [saved, setSaved] = useState(false);
-    const [deleteOpen, setDeleteOpen] = useState(false);
-    const [deleted, setDeleted] = useState(false);
-
-    const set = (field: keyof Profile) => (value: string) =>
-        setProfileEdits((p) => ({ ...p, [field]: value }));
-
-    const handleSave = () => {
-        if (user) {
-            register({
-                ...user,
-                name: profile.name,
-                email: profile.email,
-            });
-        }
-        const address = user?.walletAddress ?? walletAddress;
-        if (address) {
-            localStorage.setItem(
-                profileKey(address),
-                JSON.stringify({ name: profile.name, email: profile.email }),
-            );
-        }
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2500);
-    };
+    }, [deleted]);
 
     const handleDelete = () => {
         localStorage.clear();
@@ -164,10 +120,7 @@ export function SettingsPage() {
                 <div className={styles.deletedState}>
                     <div className={styles.deletedIcon}>◌</div>
                     <h2 className={styles.deletedTitle}>Account erased</h2>
-                    <p className={styles.deletedSub}>
-                        All local data has been cleared and a nullification record has been
-                        written to the chain.
-                    </p>
+                    <p className={styles.deletedSub}>Redirecting you to login...</p>
                 </div>
             </div>
         );
@@ -180,21 +133,21 @@ export function SettingsPage() {
             </div>
 
             <div className={styles.contentArea}>
-
+                
                 {/* ── Profile ── */}
                 <section className={styles.card}>
                     <SectionHeader label="Profile" />
                     <div className={styles.fieldGrid}>
                         <Field
                             label="Display name"
-                            value={profile.name}
-                            onChange={set("name")}
+                            value={user?.name ?? ""}
+                            onChange={() => {}} // Hook up to live edit state if added later
                             placeholder="Your full name"
                         />
                         <Field
                             label="Email"
-                            value={profile.email}
-                            onChange={set("email")}
+                            value={user?.email ?? ""}
+                            onChange={() => {}} // Hook up to live edit state if added later
                             placeholder="you@example.com"
                             type="email"
                         />
@@ -204,29 +157,47 @@ export function SettingsPage() {
                 {/* ── Connected wallet ── */}
                 <section className={styles.card}>
                     <SectionHeader label="Connected wallet" />
-                    {connected ? (
-                        <div className={styles.walletInfo}>
-                            <div className={styles.walletRow}>
-                                <span className={styles.walletLabel}>{walletName}</span>
-                                <span className={styles.connectedPill}>Connected</span>
-                            </div>
-                            {walletAddress && (
-                                <span className={styles.walletAddress}>
-                                    {walletAddress.slice(0, 20)}…{walletAddress.slice(-8)}
-                                </span>
-                            )}
-                        </div>
-                    ) : (
-                        <p className={styles.emptyHint}>No wallet connected.</p>
-                    )}
+                    {(() => {
+                        const displayAddress = walletAddress ?? user?.walletAddress ?? null;
+                        if (connected && displayAddress) {
+                            return (
+                                <div className={styles.walletInfo}>
+                                    <div className={styles.walletRow}>
+                                        <span className={styles.walletLabel}>{walletName}</span>
+                                        <span className={styles.connectedPill}>Connected</span>
+                                    </div>
+                                    <span className={styles.walletAddress}>
+                                        {displayAddress.slice(0, 20)}…{displayAddress.slice(-8)}
+                                    </span>
+                                </div>
+                            );
+                        }
+                        if (displayAddress) {
+                            return (
+                                <div className={styles.walletInfo}>
+                                    <div className={styles.walletRow}>
+                                        <span className={styles.walletAddress}>
+                                            {displayAddress.slice(0, 20)}…{displayAddress.slice(-8)}
+                                        </span>
+                                        <span className={styles.disconnectedPill}>Not connected</span>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        return <p className={styles.emptyHint}>No wallet connected.</p>;
+                    })()}
                 </section>
 
-                {/* ── Save ── */}
-                <div className={styles.saveRow}>
-                    <button className={styles.saveBtn} onClick={handleSave}>
-                        {saved ? "✓ Saved" : "Save changes"}
+                {/* ── Session ── */}
+                <section className={styles.card}>
+                    <SectionHeader label="Session" />
+                    <p className={styles.emptyHint}>
+                        Logging out clears your session. Your credentials stay saved.
+                    </p>
+                    <button className={styles.logoutBtn} onClick={logout}>
+                        Log out
                     </button>
-                </div>
+                </section>
 
                 {/* ── Danger zone ── */}
                 <section className={styles.dangerZone}>
@@ -249,9 +220,9 @@ export function SettingsPage() {
             </div>
 
             {deleteOpen && (
-                <DeleteModal
-                    onCancel={() => setDeleteOpen(false)}
-                    onConfirm={handleDelete}
+                <DeleteModal 
+                    onCancel={() => setDeleteOpen(false)} 
+                    onConfirm={handleDelete} 
                 />
             )}
         </div>
