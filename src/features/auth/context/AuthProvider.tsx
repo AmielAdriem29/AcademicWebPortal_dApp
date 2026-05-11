@@ -19,7 +19,10 @@ function getUsers(): Record<string, UserProfile> {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(() => {
     try {
-      const session = localStorage.getItem(SESSION_KEY);
+      // sessionStorage clears automatically when the tab is closed
+      const session = sessionStorage.getItem(SESSION_KEY);
+      // Also clear any stale session that may be left in localStorage from before
+      localStorage.removeItem(SESSION_KEY);
       return session ? JSON.parse(session) : null;
     } catch {
       return null;
@@ -34,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const profile = getUsers()[address] || null;
     if (profile) {
       setUser(profile);
-      localStorage.setItem(SESSION_KEY, JSON.stringify(profile));
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(profile));
     }
     return profile;
   };
@@ -44,12 +47,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     users[profile.walletAddress] = profile;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
     setUser(profile);
-    localStorage.setItem(SESSION_KEY, JSON.stringify(profile));
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(profile));
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
     localStorage.removeItem(WALLET_KEY);
   };
 
