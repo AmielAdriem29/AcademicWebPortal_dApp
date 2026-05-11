@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useWallet } from '@meshsdk/react';
 import { useNavigation } from './shared/hooks/useNavigation';
 import { Sidebar } from './shared/components/layout/Sidebar';
-// App.tsx
 import { AuthProvider } from './features/auth/context/AuthProvider';
 import { useAuth } from './features/auth/context/useAuth';
 import { LoginPage } from './features/auth/pages/LoginPage';
@@ -16,7 +16,6 @@ import styles from './App.module.css';
 
 type AuthView = 'login' | 'register';
 
-// Render the verify page for any /verify/:token path — no auth, no sidebar
 function isVerifyRoute() {
   return window.location.pathname.startsWith('/verify/');
 }
@@ -24,9 +23,21 @@ function isVerifyRoute() {
 function AppContent() {
   const { user } = useAuth();
   const { active, navigate } = useNavigation('vault');
+  const { connected, connect } = useWallet();
   const [authView, setAuthView] = useState<AuthView>('login');
   const shareParams = new URLSearchParams(window.location.search);
   const isShareLink = Boolean(shareParams.get('wallet') && shareParams.get('token'));
+
+  useEffect(() => {
+    if (user && !connected) {
+      const savedWallet = localStorage.getItem('chaincred_wallet');
+      if (savedWallet) {
+        connect(savedWallet).catch(() => {
+          localStorage.removeItem('chaincred_wallet');
+        });
+      }
+    }
+  }, [user, connected, connect]);
 
   if (isVerifyRoute()) return <VerifyPage />;
 

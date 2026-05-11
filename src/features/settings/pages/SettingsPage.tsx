@@ -3,6 +3,8 @@ import { useWallet } from "@meshsdk/react";
 import { useAuth } from "../../auth";
 import styles from "./SettingsPage.module.css";
 
+const WALLET_KEY = 'chaincred_wallet';
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SectionHeader({ label }: { label: string }) {
@@ -127,9 +129,17 @@ export function SettingsPage() {
         }
     }, [deleted]);
 
-    const handleLogout = async () => {
+   const handleLogout = async () => {
+    try {
         await disconnect();
+    } catch {
+        // ignore
+    } finally {
+        localStorage.removeItem(WALLET_KEY);
+        localStorage.removeItem('chaincred_session');
         logout();
+        window.location.href = '/';
+    }
     };
 
     const handleDelete = () => {

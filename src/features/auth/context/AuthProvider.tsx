@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { AuthContext } from './authContext';
-// Import these from your types file; do not re-declare UserProfile here
 import type { UserProfile } from './authTypes';
 
 const STORAGE_KEY = 'chaincred_users';
 const SESSION_KEY = 'chaincred_session';
+const WALLET_KEY = 'chaincred_wallet';
 
 function getUsers(): Record<string, UserProfile> {
   try {
@@ -50,9 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(WALLET_KEY);
   };
 
-  // Memoizing the value prevents unnecessary re-renders of all consumers
   const value = useMemo(() => ({
     user,
     login,
