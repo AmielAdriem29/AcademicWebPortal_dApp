@@ -386,3 +386,59 @@
   max-width: 400px;
   margin: 0;
 }
+
+.logoutModal {
+  background: #0d1220;
+  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 36px;
+  width: min(420px, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+}
+
+.logoutModalTitle {
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  text-align: center;
+}
+
+.logoutModalBody {
+  font-size: 15px;
+  color: #8C959F;
+  line-height: 1.6;
+  margin: 0;
+  text-align: center;
+}
+
+.logoutModalActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.logoutModalActions > * {
+  flex: 1;
+}
+
+.logoutConfirmBtn {
+  padding: 11px 20px;
+  font-size: 15px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  background: transparent;
+  color: #e05252;               /* Use the same red as the delete button */
+  border: 0.5px solid #e05252;  /* Matching red border */
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.logoutConfirmBtn:hover {
+  background: #c03a3a;
+  color: #fff;
+}
