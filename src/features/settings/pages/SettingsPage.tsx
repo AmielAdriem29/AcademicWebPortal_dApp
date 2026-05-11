@@ -3,6 +3,8 @@ import { useWallet } from "@meshsdk/react";
 import { useAuth } from "../../auth";
 import styles from "./SettingsPage.module.css";
 
+const WALLET_KEY = 'chaincred_wallet';
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SectionHeader({ label }: { label: string }) {
@@ -32,6 +34,27 @@ function Field({
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
             />
+        </div>
+    );
+}
+
+function LogoutModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+    return (
+        <div className={styles.backdrop} onClick={onCancel}>
+            <div className={styles.logoutModal} onClick={(e) => e.stopPropagation()}>
+                <h2 className={styles.logoutModalTitle}>Log out?</h2>
+                <p className={styles.logoutModalBody}>
+                    This will disconnect your wallet and end your session. Your credentials will stay saved.
+                </p>
+                <div className={styles.logoutModalActions}>
+                    <button className={styles.cancelBtn} onClick={onCancel}>
+                        Cancel
+                    </button>
+                    <button className={styles.logoutConfirmBtn} onClick={onConfirm}>
+                        Log Out
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }
@@ -79,14 +102,14 @@ function DeleteModal({ onCancel, onConfirm }: { onCancel: () => void; onConfirm:
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function SettingsPage() {
-    const { connected, name: walletName, wallet } = useWallet();
+    const { connected, name: walletName, wallet, disconnect } = useWallet();
     const { user, logout } = useAuth();
 
     const [walletAddress, setWalletAddress] = useState<string | null>(null);
+    const [logoutOpen, setLogoutOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleted, setDeleted] = useState(false);
 
-    // Fetch wallet address
     useEffect(() => {
         const addressPromise = connected && wallet
             ? wallet.getChangeAddress()
@@ -97,7 +120,6 @@ export function SettingsPage() {
             .catch(() => setWalletAddress(null));
     }, [connected, wallet]);
 
-    // Handle redirect after deletion using standard browser navigation
     useEffect(() => {
         if (deleted) {
             const timer = setTimeout(() => {
@@ -106,6 +128,19 @@ export function SettingsPage() {
             return () => clearTimeout(timer);
         }
     }, [deleted]);
+
+   const handleLogout = async () => {
+    try {
+        await disconnect();
+    } catch {
+        // ignore
+    } finally {
+        localStorage.removeItem(WALLET_KEY);
+        localStorage.removeItem('chaincred_session');
+        logout();
+        window.location.href = '/';
+    }
+    };
 
     const handleDelete = () => {
         localStorage.clear();
@@ -133,7 +168,7 @@ export function SettingsPage() {
             </div>
 
             <div className={styles.contentArea}>
-                
+
                 {/* ── Profile ── */}
                 <section className={styles.card}>
                     <SectionHeader label="Profile" />
@@ -141,13 +176,13 @@ export function SettingsPage() {
                         <Field
                             label="Display name"
                             value={user?.name ?? ""}
-                            onChange={() => {}} // Hook up to live edit state if added later
+                            onChange={() => {}}
                             placeholder="Your full name"
                         />
                         <Field
                             label="Email"
                             value={user?.email ?? ""}
-                            onChange={() => {}} // Hook up to live edit state if added later
+                            onChange={() => {}}
                             placeholder="you@example.com"
                             type="email"
                         />
@@ -192,9 +227,9 @@ export function SettingsPage() {
                 <section className={styles.card}>
                     <SectionHeader label="Session" />
                     <p className={styles.emptyHint}>
-                        Logging out clears your session. Your credentials stay saved.
+                        Logging out clears your session and disconnects your wallet. Your credentials stay saved.
                     </p>
-                    <button className={styles.logoutBtn} onClick={logout}>
+                    <button className={styles.logoutBtn} onClick={() => setLogoutOpen(true)}>
                         Log out
                     </button>
                 </section>
@@ -219,10 +254,17 @@ export function SettingsPage() {
                 </section>
             </div>
 
+            {logoutOpen && (
+                <LogoutModal
+                    onCancel={() => setLogoutOpen(false)}
+                    onConfirm={handleLogout}
+                />
+            )}
+
             {deleteOpen && (
-                <DeleteModal 
-                    onCancel={() => setDeleteOpen(false)} 
-                    onConfirm={handleDelete} 
+                <DeleteModal
+                    onCancel={() => setDeleteOpen(false)}
+                    onConfirm={handleDelete}
                 />
             )}
         </div>
