@@ -21,14 +21,27 @@ function isVerifyRoute() {
   return window.location.pathname.startsWith('/verify/');
 }
 
+// Check if current path is a public profile route /profile/:walletAddress
+function parseProfileRoute() {
+  const pathname = window.location.pathname;
+  const match = pathname.match(/^\/profile\/([a-zA-Z0-9]+)$/);
+  return match ? match[1] : null;
+}
+
 function AppContent() {
   const { user } = useAuth();
   const { active, navigate } = useNavigation('vault');
   const [authView, setAuthView] = useState<AuthView>('login');
   const shareParams = new URLSearchParams(window.location.search);
   const isShareLink = Boolean(shareParams.get('wallet') && shareParams.get('token'));
+  const publicProfileWallet = parseProfileRoute();
 
   if (isVerifyRoute()) return <VerifyPage />;
+
+  // Public profile route (no auth required, no sidebar)
+  if (publicProfileWallet) {
+    return <PublicProfilePage publicProfileWallet={publicProfileWallet} />;
+  }
 
   if (isShareLink) return <PublicProfilePage />;
 

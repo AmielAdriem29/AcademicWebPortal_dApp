@@ -5,6 +5,7 @@ import { StatusBadge } from '../../../shared/components/ui/StatusBadge';
 import { useCredentials } from '../../credentials/context/useCredentials';
 import { useAuth } from '../../auth/context/useAuth';
 import { encodeVerifyToken } from '../../../shared/utils/verifyToken';
+import { previewCredentialFile } from '../../../shared/utils/filePreview';
 import styles from './CredentialCard.module.css';
 
 interface Props {
@@ -211,7 +212,8 @@ function DeleteModal({
 // ── Credential Card ──────────────────────────────────────────────────────────
 export function CredentialCard({ credential }: Props) {
   const { updateCredential } = useCredentials();
-  const { id, name, institution, year, logoText, logoColor, logoTextColor, status, txHash, blockNumber, issuedDate, extra } = credential;
+  const { user } = useAuth();
+  const { id, name, institution, year, logoText, logoColor, logoTextColor, status, txHash, blockNumber, issuedDate, extra, fileKey, fileName, fileType } = credential;
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(name);
@@ -219,10 +221,23 @@ export function CredentialCard({ credential }: Props) {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [hashCopied, setHashCopied] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const handleSave = async () => {
     await updateCredential(id, { name: editName.trim(), institution: editInstitution.trim() });
     setEditing(false);
+  };
+
+  const handleViewDocument = async () => {
+    if (!fileKey || !fileName || !fileType || !user) return;
+    setPreviewLoading(true);
+    try {
+      await previewCredentialFile(user.walletAddress, id, fileName, fileType);
+    } catch (error) {
+      console.error('Failed to preview document:', error);
+    } finally {
+      setPreviewLoading(false);
+    }
   };
 
   const isFullHash = txHash && !txHash.startsWith('sha256:') && txHash.length > 20;
@@ -324,6 +339,15 @@ export function CredentialCard({ credential }: Props) {
               </button>
               <button className={styles.actionBtn} onClick={() => setEditing(true)}>Edit</button>
             </>
+          )}
+          {status === 'verified' && fileKey && fileName && fileType && (
+            <button
+              className={styles.actionBtn}
+              onClick={handleViewDocument}
+              disabled={previewLoading}
+            >
+              {previewLoading ? 'Opening…' : '📄 View Document'}
+            </button>
           )}
           <button
             className={`${styles.actionBtn} ${styles.actionBtnDanger}`}

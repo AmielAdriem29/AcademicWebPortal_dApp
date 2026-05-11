@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useCredentials } from '../../credentials/context/useCredentials';
 import { useAuth } from '../../auth/context/useAuth';
+import { saveCredentialFile } from '../../../utils/storage';
 import type { Credential } from '../../../shared/types';
 import styles from './IssuanceModal.module.css';
 
@@ -263,9 +264,24 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
         sha256Hash: fullHash,
         ownerName: user?.name ?? '',
         ownerWallet: user?.walletAddress ?? '',
+        // File metadata for preview functionality
+        fileKey: `file_${generateId()}`,
+        fileName: file.name,
+        fileType: file.type,
       };
 
       await addCredential(newCredential);
+      
+      // Save the file blob to IndexedDB for later preview
+      if (user) {
+        try {
+          await saveCredentialFile(user.walletAddress, newCredential.id, file);
+        } catch (err) {
+          console.error('Failed to save credential file to storage:', err);
+          // Don't fail the entire flow if file storage fails
+        }
+      }
+      
       setStep('done');
     } catch {
       setError('Failed to process file. Please try again.');
