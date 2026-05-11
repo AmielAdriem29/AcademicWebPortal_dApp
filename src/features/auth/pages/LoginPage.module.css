@@ -40,12 +40,14 @@
   font-size: 32px;
   font-weight: 600;
   color: #f1f5f9;
+  text-align: center; /* added */
 }
 
 .sub {
   font-size: 16px;
   color: #94a3b8;
   margin-top: -8px;
+  text-align: center; /* added */
 }
 
 .walletList {
@@ -105,7 +107,7 @@
   border: 0.5px solid rgba(74, 222, 128, 0.2);
   padding: 8px 16px;
   border-radius: 20px;
-  align-self: flex-start;
+  align-self: center; /* was flex-start */
 }
 
 .btnPrimary {
@@ -127,12 +129,39 @@
 }
 
 .error {
+  display: flex; /* was just a <p>, now flex for icon + dismiss */
+  align-items: flex-start;
+  gap: 8px;
   font-size: 14px;
   color: #f87171;
   background: rgba(239, 68, 68, 0.1);
   border: 0.5px solid rgba(248, 113, 113, 0.2);
   padding: 10px 14px;
   border-radius: 8px;
+}
+
+.errorIcon {
+  flex-shrink: 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.errorDismiss {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #f87171;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 0 0 4px;
+  line-height: 1.4;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.errorDismiss:hover {
+  opacity: 1;
 }
 
 .empty {
@@ -164,4 +193,20 @@
 
 .linkBtn:hover {
   text-decoration: underline;
+}
+
+.relinkBtn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  text-align: center;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.relinkBtn:hover {
+  color: #f1f5f9;
 }
