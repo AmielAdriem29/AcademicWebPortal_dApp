@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useWallet } from '@meshsdk/react';
+import { useState } from 'react';
 import { useNavigation } from './shared/hooks/useNavigation';
 import { Sidebar } from './shared/components/layout/Sidebar';
 import { AuthProvider } from './features/auth/context/AuthProvider';
@@ -20,7 +19,6 @@ function isVerifyRoute() {
   return window.location.pathname.startsWith('/verify/');
 }
 
-// Check if current path is a public profile route /profile/:walletAddress
 function parseProfileRoute() {
   const pathname = window.location.pathname;
   const match = pathname.match(/^\/profile\/([a-zA-Z0-9]+)$/);
@@ -30,26 +28,13 @@ function parseProfileRoute() {
 function AppContent() {
   const { user } = useAuth();
   const { active, navigate } = useNavigation('vault');
-  const { connected, connect } = useWallet();
   const [authView, setAuthView] = useState<AuthView>('login');
   const shareParams = new URLSearchParams(window.location.search);
   const isShareLink = Boolean(shareParams.get('wallet') && shareParams.get('token'));
   const publicProfileWallet = parseProfileRoute();
 
-  useEffect(() => {
-    if (user && !connected) {
-      const savedWallet = localStorage.getItem('chaincred_wallet');
-      if (savedWallet) {
-        connect(savedWallet).catch(() => {
-          localStorage.removeItem('chaincred_wallet');
-        });
-      }
-    }
-  }, [user, connected, connect]);
-
   if (isVerifyRoute()) return <VerifyPage />;
 
-  // Public profile route (no auth required, no sidebar)
   if (publicProfileWallet) {
     return <PublicProfilePage publicProfileWallet={publicProfileWallet} />;
   }
