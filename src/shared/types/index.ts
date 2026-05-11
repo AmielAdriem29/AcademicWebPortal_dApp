@@ -17,6 +17,10 @@ export interface Credential {
   sha256Hash?: string;
   ownerName?: string;
   ownerWallet?: string;
+  // File storage reference
+  fileKey?: string;
+  fileName?: string;
+  fileType?: string;
 }
 
 export interface AccessPermission {

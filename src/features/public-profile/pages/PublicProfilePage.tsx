@@ -3,6 +3,7 @@ import { useAuth } from '../../auth/context/useAuth';
 import type { Credential, ShareLinkRecord } from '../../../shared/types';
 import { StatusBadge } from '../../../shared/components/ui/StatusBadge';
 import { findShareLink, markShareLinkViewed } from '../../../shared/utils/shareLinks';
+import { previewCredentialFile } from '../../../shared/utils/filePreview';
 import styles from './PublicProfilePage.module.css';
 
 const VAULT_KEY_PREFIX = 'chaincred_vault_';
@@ -20,19 +21,27 @@ function formatShortWallet(walletAddress: string): string {
   return `${walletAddress.slice(0, 8)}…${walletAddress.slice(-6)}`;
 }
 
-export function PublicProfilePage() {
+interface PublicProfilePageProps {
+  publicProfileWallet?: string;
+}
+
+export function PublicProfilePage({ publicProfileWallet }: PublicProfilePageProps = {}) {
   const { user } = useAuth();
   const [sharedCredentials, setSharedCredentials] = useState<Credential[]>([]);
+  const [previewingId, setPreviewingId] = useState<string | null>(null);
 
   const searchParams = useMemo(() => new URLSearchParams(window.location.search), []);
   const requestedWallet = searchParams.get('wallet') ?? '';
   const requestedToken = searchParams.get('token') ?? '';
   const ownerWallet = user?.walletAddress ?? '';
+  
+  // Determine if this is a direct public profile route or a share link
+  const isDirectProfileRoute = Boolean(publicProfileWallet);
   const initialShare = requestedWallet && requestedToken ? findShareLink(requestedWallet, requestedToken) : null;
   const [shareRecord, setShareRecord] = useState<ShareLinkRecord | null>(initialShare);
   const shareDenied = Boolean(requestedWallet && requestedToken) && (!shareRecord || shareRecord.status === 'revoked');
   const isSharedView = Boolean(shareRecord && shareRecord.status === 'active');
-  const activeWallet = isSharedView ? shareRecord?.walletAddress ?? '' : ownerWallet;
+  const activeWallet = isDirectProfileRoute ? publicProfileWallet : (isSharedView ? shareRecord?.walletAddress ?? '' : ownerWallet);
 
   // Poll for revocations (catches same-tab changes) and listen for storage events (cross-tab)
   useEffect(() => {
@@ -84,7 +93,28 @@ export function PublicProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, [activeWallet, isSharedView, shareRecord]);
+  }, [activeWallet, isSharedView, isDirectProfileRoute, shareRecord]);
+
+  const handleCardClick = async (credential: Credential) => {
+    // Only attempt preview if file info is available
+    if (!credential.fileKey || !credential.fileName || !credential.fileType) {
+      return;
+    }
+
+    setPreviewingId(credential.id);
+    try {
+      await previewCredentialFile(
+        activeWallet,
+        credential.id,
+        credential.fileName,
+        credential.fileType
+      );
+    } catch (error) {
+      console.error('Failed to preview file:', error);
+    } finally {
+      setPreviewingId(null);
+    }
+  };
 
   if (shareDenied) {
     return (
@@ -108,10 +138,11 @@ export function PublicProfilePage() {
   }
 
   const publicCredentials = sharedCredentials;
+  const walletDisplayName = isDirectProfileRoute ? formatShortWallet(publicProfileWallet) : (user?.name ?? 'Student');
 
   return (
     <div className={styles.page}>
-      <div className={styles.watermark}>{isSharedView ? 'PUBLIC PROFILE' : 'RECRUITER VIEW'}</div>
+      <div className={styles.watermark}>{isDirectProfileRoute ? 'PUBLIC PROFILE' : (isSharedView ? 'PUBLIC PROFILE' : 'RECRUITER VIEW')}</div>
 
       <div className={styles.contentArea}>
         <div className={styles.banner}>
@@ -119,14 +150,18 @@ export function PublicProfilePage() {
             <circle cx="8" cy="6" r="2.5" />
             <path d="M3 13c0-2.5 2.2-4 5-4s5 1.5 5 4" />
           </svg>
-          {isSharedView
+          {isDirectProfileRoute
+            ? 'This is a public profile view. Only verified credentials are displayed. Click any card to preview.'
+            : isSharedView
             ? `Shared access for ${shareRecord?.recipientName ?? 'your recipient'}.`
             : 'You are viewing your public profile as a recruiter would see it.'}
         </div>
 
         <div className={styles.topbar}>
           <h2 className={styles.heading}>
-            {isSharedView
+            {isDirectProfileRoute
+              ? `${walletDisplayName} · Public Profile`
+              : isSharedView
               ? `${user?.name ?? 'Student'} · Public Profile`
               : `${user?.name ?? 'Your Profile'} · Verified Profile`}
           </h2>
@@ -135,11 +170,24 @@ export function PublicProfilePage() {
         <div className={styles.grid}>
           {publicCredentials.length === 0 ? (
             <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>
-              {isSharedView ? 'No verified credentials are available for this link.' : 'No verified credentials yet.'}
+              {isDirectProfileRoute
+                ? 'No verified credentials available for this profile.'
+                : isSharedView
+                ? 'No verified credentials are available for this link.'
+                : 'No verified credentials yet.'}
             </p>
           ) : (
             publicCredentials.map(cred => (
-              <article key={cred.id} className={styles.publicCard}>
+              <article 
+                key={cred.id} 
+                className={styles.publicCard}
+                onClick={() => handleCardClick(cred)}
+                style={{
+                  cursor: cred.fileKey ? 'pointer' : 'default',
+                  opacity: previewingId === cred.id ? 0.7 : 1,
+                  transition: 'opacity 0.2s',
+                }}
+              >
                 <div className={styles.publicCardTop}>
                   <div>
                     <div className={styles.publicName}>{cred.name}</div>
@@ -148,6 +196,11 @@ export function PublicProfilePage() {
                   <StatusBadge status={cred.status} />
                 </div>
                 <div className={styles.publicMeta}>{cred.issuedDate}</div>
+                {cred.fileKey && (
+                  <div style={{ marginTop: '12px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                    📎 {cred.fileName ? 'Click to view' : 'File attached'}
+                  </div>
+                )}
               </article>
             ))
           )}
