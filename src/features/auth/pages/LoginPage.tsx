@@ -82,7 +82,13 @@ export function LoginPage({ onNavigateRegister }: Props) {
               </div>
           )}
 
-          {error && <p className={styles.error}>{error}</p>}
+          {error && (
+            <div className={styles.error}>
+              <span className={styles.errorIcon}>⚠</span>
+              <span>{error}</span>
+              <button className={styles.errorDismiss} onClick={() => setError('')} aria-label="Dismiss error">✕</button>
+            </div>
+          )}
 
           <div className={styles.footer}>
             Don't have an account?{' '}
