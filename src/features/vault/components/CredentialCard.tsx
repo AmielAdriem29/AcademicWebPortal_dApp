@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useWallet, useWalletList } from '@meshsdk/react';
-import type { Credential } from '../../../shared/types/index.ts';
-import { StatusBadge } from '../../../shared/components/ui/StatusBadge';
-import { useCredentials } from '../../credentials/context/useCredentials';
-import { useAuth } from '../../auth/context/useAuth';
+import type { Credential } from '../../../shared';
+import { StatusBadge } from '../../../shared';
+import { useCredentials } from '../../credentials';
+import { useAuth } from '../../auth';
 import { encodeVerifyToken } from '../../../shared/utils/verifyToken';
 import { previewCredentialFile } from '../../../shared/utils/filePreview';
 import styles from './CredentialCard.module.css';
@@ -37,29 +37,29 @@ function VerifyLinkModal({ credential, onClose }: { credential: Credential; onCl
   };
 
   return (
-    <div className={styles.modalBackdrop} onClick={onClose}>
-      <div className={styles.verifyModal} onClick={e => e.stopPropagation()}>
-        <div className={styles.verifyModalHeader}>
-          <div>
-            <div className={styles.verifyModalTitle}>Send for Verification</div>
-            <div className={styles.verifyModalSub}>Share this link with {credential.institution}</div>
+      <div className={styles.modalBackdrop} onClick={onClose}>
+        <div className={styles.verifyModal} onClick={e => e.stopPropagation()}>
+          <div className={styles.verifyModalHeader}>
+            <div>
+              <div className={styles.verifyModalTitle}>Send for Verification</div>
+              <div className={styles.verifyModalSub}>Share this link with {credential.institution}</div>
+            </div>
+            <button className={styles.closeBtn} onClick={onClose}>✕</button>
           </div>
-          <button className={styles.closeBtn} onClick={onClose}>✕</button>
-        </div>
-        <div className={styles.verifyModalBody}>
-          <div className={styles.verifyInfo}>
-            <span className={styles.verifyInfoIcon}>📋</span>
-            <span>The recipient opens this link, fills in their details, draws their signature, and submits. Their confirmation is anchored to Cardano.</span>
+          <div className={styles.verifyModalBody}>
+            <div className={styles.verifyInfo}>
+              <span className={styles.verifyInfoIcon}>📋</span>
+              <span>The recipient opens this link, fills in their details, draws their signature, and submits. Their confirmation is anchored to Cardano.</span>
+            </div>
+            <div className={styles.linkBox}>
+              <span className={styles.linkText}>{link}</span>
+            </div>
+            <button className={styles.copyBtn} onClick={handleCopy}>
+              {copied ? '✓ Copied!' : 'Copy Link'}
+            </button>
           </div>
-          <div className={styles.linkBox}>
-            <span className={styles.linkText}>{link}</span>
-          </div>
-          <button className={styles.copyBtn} onClick={handleCopy}>
-            {copied ? '✓ Copied!' : 'Copy Link'}
-          </button>
         </div>
       </div>
-    </div>
   );
 }
 
@@ -67,10 +67,10 @@ function VerifyLinkModal({ credential, onClose }: { credential: Credential; onCl
 type DeleteStep = 'confirm' | 'wallet' | 'deleting';
 
 function DeleteModal({
-  credential,
-  onCancel,
-  onDeleted,
-}: {
+                       credential,
+                       onCancel,
+                       onDeleted,
+                     }: {
   credential: Credential;
   onCancel: () => void;
   onDeleted: () => void;
@@ -119,93 +119,93 @@ function DeleteModal({
   };
 
   return (
-    <div className={styles.deleteModalBackdrop}>
-      <div className={styles.deleteModal} onClick={e => e.stopPropagation()}>
+      <div className={styles.deleteModalBackdrop}>
+        <div className={styles.deleteModal} onClick={e => e.stopPropagation()}>
 
-        {step === 'confirm' && (
-          <>
-            <div className={styles.deleteModalIcon}>⚠</div>
-            <div className={styles.deleteModalTitle}>Delete credential?</div>
-            <div className={styles.deleteModalCred}>"{credential.name}"</div>
-            <div className={styles.deleteModalSub}>
-              This permanently removes the credential from your vault.
-              On-chain records are unaffected, but you won't be able to
-              recover it without re-adding it manually.
-            </div>
-            {credential.status === 'verified' && (
-              <div className={styles.deleteModalWarning}>
-                This credential is verified and visible on your public profile.
-                Deleting it will remove it from recruiter view.
-              </div>
-            )}
-            <div className={styles.deleteModalActions}>
-              <button className={styles.deleteCancelBtn} onClick={onCancel}>Cancel</button>
-              <button className={styles.deleteNextBtn} onClick={() => setStep('wallet')}>
-                Continue →
-              </button>
-            </div>
-          </>
-        )}
-
-        {(step === 'wallet' || step === 'deleting') && (
-          <>
-            <div className={styles.deleteModalIcon}>🔐</div>
-            <div className={styles.deleteModalTitle}>Confirm with your wallet</div>
-            <div className={styles.deleteModalSub}>
-              Connect your registered wallet to confirm you authorise this deletion.
-            </div>
-
-            {error && <div className={styles.deleteModalError}>{error}</div>}
-
-            {!connected ? (
-              <div className={styles.walletList}>
-                {wallets.length === 0 ? (
-                  <p className={styles.noWallets}>No Cardano wallets detected.</p>
-                ) : (
-                  wallets.map(w => (
-                    <button
-                      key={w.id}
-                      className={styles.walletBtn}
-                      onClick={() => handleConnect(w.id)}
-                      disabled={connecting}
-                    >
-                      <img src={w.icon} alt={w.name} className={styles.walletIcon} />
-                      <span>{w.name}</span>
-                    </button>
-                  ))
+          {step === 'confirm' && (
+              <>
+                <div className={styles.deleteModalIcon}>⚠</div>
+                <div className={styles.deleteModalTitle}>Delete credential?</div>
+                <div className={styles.deleteModalCred}>"{credential.name}"</div>
+                <div className={styles.deleteModalSub}>
+                  This permanently removes the credential from your vault.
+                  On-chain records are unaffected, but you won't be able to
+                  recover it without re-adding it manually.
+                </div>
+                {credential.status === 'verified' && (
+                    <div className={styles.deleteModalWarning}>
+                      This credential is verified and visible on your public profile.
+                      Deleting it will remove it from recruiter view.
+                    </div>
                 )}
-              </div>
-            ) : (
-              <div className={styles.walletConnectedBadge}>✓ Wallet connected</div>
-            )}
+                <div className={styles.deleteModalActions}>
+                  <button className={styles.deleteCancelBtn} onClick={onCancel}>Cancel</button>
+                  <button className={styles.deleteNextBtn} onClick={() => setStep('wallet')}>
+                    Continue →
+                  </button>
+                </div>
+              </>
+          )}
 
-            <div className={styles.deleteModalActions}>
-              <button
-                className={styles.deleteCancelBtn}
-                onClick={onCancel}
-                disabled={step === 'deleting'}
-              >
-                Cancel
-              </button>
-              <button
-                className={styles.deleteConfirmBtn}
-                onClick={handleWalletConfirm}
-                disabled={!connected || step === 'deleting'}
-              >
-                {step === 'deleting' ? (
-                  <span className={styles.deletingInner}>
+          {(step === 'wallet' || step === 'deleting') && (
+              <>
+                <div className={styles.deleteModalIcon}>🔐</div>
+                <div className={styles.deleteModalTitle}>Confirm with your wallet</div>
+                <div className={styles.deleteModalSub}>
+                  Connect your registered wallet to confirm you authorise this deletion.
+                </div>
+
+                {error && <div className={styles.deleteModalError}>{error}</div>}
+
+                {!connected ? (
+                    <div className={styles.walletList}>
+                      {wallets.length === 0 ? (
+                          <p className={styles.noWallets}>No Cardano wallets detected.</p>
+                      ) : (
+                          wallets.map(w => (
+                              <button
+                                  key={w.id}
+                                  className={styles.walletBtn}
+                                  onClick={() => handleConnect(w.id)}
+                                  disabled={connecting}
+                              >
+                                <img src={w.icon} alt={w.name} className={styles.walletIcon} />
+                                <span>{w.name}</span>
+                              </button>
+                          ))
+                      )}
+                    </div>
+                ) : (
+                    <div className={styles.walletConnectedBadge}>✓ Wallet connected</div>
+                )}
+
+                <div className={styles.deleteModalActions}>
+                  <button
+                      className={styles.deleteCancelBtn}
+                      onClick={onCancel}
+                      disabled={step === 'deleting'}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                      className={styles.deleteConfirmBtn}
+                      onClick={handleWalletConfirm}
+                      disabled={!connected || step === 'deleting'}
+                  >
+                    {step === 'deleting' ? (
+                        <span className={styles.deletingInner}>
                     <span className={styles.deleteSpinner} />
                     Deleting…
                   </span>
-                ) : (
-                  'Delete permanently'
-                )}
-              </button>
-            </div>
-          </>
-        )}
+                    ) : (
+                        'Delete permanently'
+                    )}
+                  </button>
+                </div>
+              </>
+          )}
+        </div>
       </div>
-    </div>
   );
 }
 
@@ -213,7 +213,7 @@ function DeleteModal({
 export function CredentialCard({ credential }: Props) {
   const { updateCredential } = useCredentials();
   const { user } = useAuth();
-  const { id, name, institution, year, logoText, logoColor, logoTextColor, status, txHash, blockNumber, issuedDate, extra, fileKey, fileName, fileType } = credential;
+  const { id, name, institution, year, logoText, logoColor, logoTextColor, status, txHash, blockNumber, issuedDate, extra, fileKey, fileName, fileType, ipfsCid, ipfsGatewayUrl } = credential;
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(name);
@@ -229,6 +229,12 @@ export function CredentialCard({ credential }: Props) {
   };
 
   const handleViewDocument = async () => {
+    // Prefer the IPFS gateway URL — it's permanent and works on any device
+    if (ipfsGatewayUrl) {
+      window.open(ipfsGatewayUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    // Fallback: serve from local IndexedDB cache (only works on this browser)
     if (!fileKey || !fileName || !fileType || !user) return;
     setPreviewLoading(true);
     try {
@@ -242,8 +248,8 @@ export function CredentialCard({ credential }: Props) {
 
   const isFullHash = txHash && !txHash.startsWith('sha256:') && txHash.length > 20;
   const displayHash = isFullHash
-    ? `${txHash.slice(0, 16)}…${txHash.slice(-6)}`
-    : txHash;
+      ? `${txHash.slice(0, 16)}…${txHash.slice(-6)}`
+      : txHash;
 
   const handleHashCopy = () => {
     if (!isFullHash) return;
@@ -254,109 +260,109 @@ export function CredentialCard({ credential }: Props) {
 
   if (editing) {
     return (
-      <div className={styles.card}>
-        <div className={styles.editHeader}>
-          <span className={styles.editTitle}>Edit credential</span>
-          <StatusBadge status={status} />
+        <div className={styles.card}>
+          <div className={styles.editHeader}>
+            <span className={styles.editTitle}>Edit credential</span>
+            <StatusBadge status={status} />
+          </div>
+          <input
+              className={styles.editInput}
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+              placeholder="Credential name"
+          />
+          <input
+              className={styles.editInput}
+              value={editInstitution}
+              onChange={e => setEditInstitution(e.target.value)}
+              placeholder="Institution"
+          />
+          <div className={styles.cardActions}>
+            <button className={styles.actionBtn} onClick={() => setEditing(false)}>Cancel</button>
+            <button className={styles.btnSave} onClick={handleSave}>Save changes</button>
+          </div>
         </div>
-        <input
-          className={styles.editInput}
-          value={editName}
-          onChange={e => setEditName(e.target.value)}
-          placeholder="Credential name"
-        />
-        <input
-          className={styles.editInput}
-          value={editInstitution}
-          onChange={e => setEditInstitution(e.target.value)}
-          placeholder="Institution"
-        />
-        <div className={styles.cardActions}>
-          <button className={styles.actionBtn} onClick={() => setEditing(false)}>Cancel</button>
-          <button className={styles.btnSave} onClick={handleSave}>Save changes</button>
-        </div>
-      </div>
     );
   }
 
   return (
-    <>
-      {showVerifyModal && (
-        <VerifyLinkModal credential={credential} onClose={() => setShowVerifyModal(false)} />
-      )}
-      {showDeleteModal && (
-        <DeleteModal
-          credential={credential}
-          onCancel={() => setShowDeleteModal(false)}
-          onDeleted={() => setShowDeleteModal(false)}
-        />
-      )}
+      <>
+        {showVerifyModal && (
+            <VerifyLinkModal credential={credential} onClose={() => setShowVerifyModal(false)} />
+        )}
+        {showDeleteModal && (
+            <DeleteModal
+                credential={credential}
+                onCancel={() => setShowDeleteModal(false)}
+                onDeleted={() => setShowDeleteModal(false)}
+            />
+        )}
 
-      <div className={`${styles.card} ${status === 'verified' ? styles.verifiedCard : ''}`}>
-        <div className={styles.top}>
-          <div className={styles.meta}>
-            <div
-              className={styles.logo}
-              style={{ background: logoColor, color: logoTextColor }}
-            >
-              {logoText}
+        <div className={`${styles.card} ${status === 'verified' ? styles.verifiedCard : ''}`}>
+          <div className={styles.top}>
+            <div className={styles.meta}>
+              <div
+                  className={styles.logo}
+                  style={{ background: logoColor, color: logoTextColor }}
+              >
+                {logoText}
+              </div>
+              <div>
+                <div className={styles.name}>{name}</div>
+                <div className={styles.inst}>{institution} · {year}</div>
+              </div>
             </div>
-            <div>
-              <div className={styles.name}>{name}</div>
-              <div className={styles.inst}>{institution} · {year}</div>
-            </div>
+            <StatusBadge status={status} />
           </div>
-          <StatusBadge status={status} />
-        </div>
 
-        <button
-          className={`${styles.hash} ${isFullHash ? styles.hashClickable : ''}`}
-          onClick={handleHashCopy}
-          title={isFullHash ? (hashCopied ? 'Copied!' : 'Click to copy full hash') : undefined}
-          disabled={!isFullHash}
-        >
-          <span className={styles.hashText}>{displayHash}</span>
-          {isFullHash && (
-            <span className={styles.hashCopyHint}>
+          <button
+              className={`${styles.hash} ${isFullHash ? styles.hashClickable : ''}`}
+              onClick={handleHashCopy}
+              title={isFullHash ? (hashCopied ? 'Copied!' : 'Click to copy full hash') : undefined}
+              disabled={!isFullHash}
+          >
+            <span className={styles.hashText}>{displayHash}</span>
+            {isFullHash && (
+                <span className={styles.hashCopyHint}>
               {hashCopied ? '✓ Copied' : 'Copy'}
             </span>
-          )}
-        </button>
-
-        <div className={styles.date}>
-          {extra
-            ? `${issuedDate} · ${extra}`
-            : blockNumber
-              ? `Issued ${issuedDate} · Block #${blockNumber}`
-              : issuedDate}
-        </div>
-
-        <div className={styles.cardActions}>
-          {status === 'pending' && (
-            <>
-              <button className={styles.actionBtnVerify} onClick={() => setShowVerifyModal(true)}>
-                Send for Verification
-              </button>
-              <button className={styles.actionBtn} onClick={() => setEditing(true)}>Edit</button>
-            </>
-          )}
-          {status === 'verified' && fileKey && fileName && fileType && (
-            <button
-              className={styles.actionBtn}
-              onClick={handleViewDocument}
-              disabled={previewLoading}
-            >
-              {previewLoading ? 'Opening…' : '📄 View Document'}
-            </button>
-          )}
-          <button
-            className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-            onClick={() => setShowDeleteModal(true)}
-          >
-            Delete
+            )}
           </button>
+
+          <div className={styles.date}>
+            {extra
+                ? `${issuedDate} · ${extra}`
+                : blockNumber
+                    ? `Issued ${issuedDate} · Block #${blockNumber}`
+                    : issuedDate}
+          </div>
+
+          <div className={styles.cardActions}>
+            {status === 'pending' && (
+                <>
+                  <button className={styles.actionBtnVerify} onClick={() => setShowVerifyModal(true)}>
+                    Send for Verification
+                  </button>
+                  <button className={styles.actionBtn} onClick={() => setEditing(true)}>Edit</button>
+                </>
+            )}
+            {status === 'verified' && (ipfsGatewayUrl || (fileKey && fileName && fileType)) && (
+                <button
+                    className={styles.actionBtn}
+                    onClick={handleViewDocument}
+                    disabled={previewLoading}
+                >
+                  {previewLoading ? 'Opening…' : '📄 View Document'}
+                </button>
+            )}
+            <button
+                className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                onClick={() => setShowDeleteModal(true)}
+            >
+              Delete
+            </button>
+          </div>
         </div>
-      </div>
-    </>
+      </>
   );
 }
