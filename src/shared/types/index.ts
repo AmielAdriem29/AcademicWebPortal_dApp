@@ -13,14 +13,17 @@ export interface Credential {
   blockNumber?: string;
   issuedDate: string;
   extra?: string;
-  // Verification flow fields
+
   sha256Hash?: string;
   ownerName?: string;
   ownerWallet?: string;
-  // File storage reference
+
   fileKey?: string;
   fileName?: string;
   fileType?: string;
+
+  ipfsCid?: string;
+  ipfsGatewayUrl?: string;
 }
 
 export interface AccessPermission {
