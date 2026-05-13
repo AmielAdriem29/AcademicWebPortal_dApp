@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useCredentials } from '../../credentials/context/useCredentials';
-import { useAuth } from '../../auth/context/useAuth';
+import { useCredentials } from '../../credentials';
+import { useAuth } from '../../auth';
 import { saveCredentialFile } from '../../../utils/storage';
-import type { Credential } from '../../../shared/types';
+import { uploadToIPFS, pinOnIPFS } from '../../../shared/utils/ipfsStorage';
+import type { Credential } from '../../../shared';
 import styles from './IssuanceModal.module.css';
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Step = 'form' | 'hashing' | 'done';
+type Step = 'form' | 'hashing' | 'uploading' | 'done';
 type CredentialType = 'academic' | 'certification' | 'work';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -41,11 +42,11 @@ function DatePickerPopover({ value, onChange }: { value: string; onChange: (v: s
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const cells = Array.from({ length: firstDay + daysInMonth }, (_, i) =>
-    i < firstDay ? null : i - firstDay + 1
+      i < firstDay ? null : i - firstDay + 1
   );
 
   const selectedDay = parsed && parsed.getMonth() === month && parsed.getFullYear() === year
-    ? parsed.getDate() : null;
+      ? parsed.getDate() : null;
 
   const isFuture = (d: number) => new Date(year, month, d) > today;
   const isToday = (d: number) => d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
@@ -98,62 +99,62 @@ function DatePickerPopover({ value, onChange }: { value: string; onChange: (v: s
   }, [open]);
 
   const displayValue = parsed
-    ? parsed.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-    : '';
+      ? parsed.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+      : '';
 
   return (
-    <div className={styles.dateContainer} ref={containerRef}>
-      {/* ── ref + onClick changed ── */}
-      <button
-        ref={triggerRef}
-        type="button"
-        className={`${styles.dateInput} ${open ? styles.dateInputOpen : ''}`}
-        onClick={handleOpen}
-      >
+      <div className={styles.dateContainer} ref={containerRef}>
+        {/* ── ref + onClick changed ── */}
+        <button
+            ref={triggerRef}
+            type="button"
+            className={`${styles.dateInput} ${open ? styles.dateInputOpen : ''}`}
+            onClick={handleOpen}
+        >
         <span className={displayValue ? styles.dateValue : styles.datePlaceholder}>
           {displayValue || 'Select a date'}
         </span>
-        <span className={styles.dateChevron}>▾</span>
-      </button>
+          <span className={styles.dateChevron}>▾</span>
+        </button>
 
-      {/* ── style spread added ── */}
-      {open && (
-        <div className={styles.popover} style={popoverStyle}>
-          <div className={styles.dateNav}>
-            <button type="button" className={styles.dateNavBtn} onClick={prevMonth}>‹</button>
-            <div className={styles.dateNavCenter}>
-              <select className={styles.dateSelect} value={month} onChange={e => setMonth(+e.target.value)}>
-                {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
-              </select>
-              <select className={styles.dateSelect} value={year} onChange={e => setYear(+e.target.value)}>
-                {years.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-            <button type="button" className={styles.dateNavBtn} onClick={nextMonth}>›</button>
-          </div>
+        {/* ── style spread added ── */}
+        {open && (
+            <div className={styles.popover} style={popoverStyle}>
+              <div className={styles.dateNav}>
+                <button type="button" className={styles.dateNavBtn} onClick={prevMonth}>‹</button>
+                <div className={styles.dateNavCenter}>
+                  <select className={styles.dateSelect} value={month} onChange={e => setMonth(+e.target.value)}>
+                    {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+                  </select>
+                  <select className={styles.dateSelect} value={year} onChange={e => setYear(+e.target.value)}>
+                    {years.map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </div>
+                <button type="button" className={styles.dateNavBtn} onClick={nextMonth}>›</button>
+              </div>
 
-          <div className={styles.dateGrid}>
-            {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
-              <div key={d} className={styles.dateWeekday}>{d}</div>
-            ))}
-            {cells.map((d, i) => (
-              <button
-                key={i}
-                type="button"
-                className={`${styles.dateCell}
+              <div className={styles.dateGrid}>
+                {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
+                    <div key={d} className={styles.dateWeekday}>{d}</div>
+                ))}
+                {cells.map((d, i) => (
+                    <button
+                        key={i}
+                        type="button"
+                        className={`${styles.dateCell}
                   ${d && selectedDay === d ? styles.dateCellSelected : ''}
                   ${d && isToday(d) ? styles.dateCellToday : ''}
                   ${d && isFuture(d) ? styles.dateCellDisabled : ''}`}
-                onClick={() => d && select(d)}
-                disabled={!d || isFuture(d)}
-              >
-                {d ?? ''}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+                        onClick={() => d && select(d)}
+                        disabled={!d || isFuture(d)}
+                    >
+                      {d ?? ''}
+                    </button>
+                ))}
+              </div>
+            </div>
+        )}
+      </div>
   );
 }
 
@@ -169,22 +170,22 @@ function FilePreview({ file, onRemove }: { file: File; onRemove: () => void }) {
   }, [file, isImage]);
 
   return (
-    <div className={styles.filePreview}>
-      {isImage && preview
-        ? <img src={preview} alt="Preview" className={styles.imagePreview} />
-        : (
-          <div className={styles.pdfPreview}>
-            <div className={styles.pdfIcon}>PDF</div>
-            <div className={styles.pdfName}>{file.name}</div>
-          </div>
-        )
-      }
-      <div className={styles.filePreviewFooter}>
-        <span className={styles.filePreviewName}>{file.name}</span>
-        <span className={styles.filePreviewSize}>{(file.size / 1024).toFixed(1)} KB</span>
-        <button type="button" className={styles.removeFileBtn} onClick={onRemove}>✕ Remove</button>
+      <div className={styles.filePreview}>
+        {isImage && preview
+            ? <img src={preview} alt="Preview" className={styles.imagePreview} />
+            : (
+                <div className={styles.pdfPreview}>
+                  <div className={styles.pdfIcon}>PDF</div>
+                  <div className={styles.pdfName}>{file.name}</div>
+                </div>
+            )
+        }
+        <div className={styles.filePreviewFooter}>
+          <span className={styles.filePreviewName}>{file.name}</span>
+          <span className={styles.filePreviewSize}>{(file.size / 1024).toFixed(1)} KB</span>
+          <button type="button" className={styles.removeFileBtn} onClick={onRemove}>✕ Remove</button>
+        </div>
       </div>
-    </div>
   );
 }
 
@@ -200,6 +201,7 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
   const [credType, setCredType] = useState<CredentialType>('academic');
   const [issueDate, setIssueDate] = useState('');
   const [hash, setHash] = useState('');
+  const [ipfsCid, setIpfsCid] = useState('');
   const [error, setError] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -220,13 +222,13 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
   }, []);
 
   const namePlaceholder = credType === 'academic' ? 'e.g. B.Sc. Computer Science'
-    : credType === 'certification' ? 'e.g. AWS Cloud Practitioner'
-    : 'e.g. Software Engineer Intern';
+      : credType === 'certification' ? 'e.g. AWS Cloud Practitioner'
+          : 'e.g. Software Engineer Intern';
 
   const institutionLabel = credType === 'work' ? 'Company / Organisation' : 'Issuing institution';
   const institutionPlaceholder = credType === 'work' ? 'e.g. Acme Corp'
-    : credType === 'certification' ? 'e.g. Amazon Web Services'
-    : 'e.g. University of Cebu';
+      : credType === 'certification' ? 'e.g. Amazon Web Services'
+          : 'e.g. University of Cebu';
 
   const dateLabel = credType === 'work' ? 'Start date' : 'Issue date';
 
@@ -238,9 +240,30 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
     setError('');
     setStep('hashing');
     try {
+      // Step 1: hash the file locally
       const fullHash = await sha256File(file);
       const shortHash = `${fullHash.slice(0, 4)}…${fullHash.slice(-4)}`;
       setHash(fullHash);
+
+      // Step 2: upload to IPFS via Blockfrost
+      setStep('uploading');
+      let cid = '';
+      let gatewayUrl = '';
+      try {
+        const ipfsResult = await uploadToIPFS(file);
+        cid = ipfsResult.cid;
+        gatewayUrl = ipfsResult.gatewayUrl;
+        setIpfsCid(cid);
+        // Pin so it isn't garbage-collected (non-blocking, non-fatal)
+        pinOnIPFS(cid).catch(err => console.warn('IPFS pin warning:', err));
+      } catch (ipfsErr) {
+        console.error('IPFS upload failed:', ipfsErr);
+        setError(
+            'Could not upload to IPFS. Check your VITE_BLOCKFROST_IPFS_KEY and try again.',
+        );
+        setStep('form');
+        return;
+      }
 
       const logoText = institution.trim().slice(0, 3).toUpperCase();
       const dateStr = new Date(issueDate + 'T00:00:00').toLocaleDateString('en-US', {
@@ -248,8 +271,8 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
       });
 
       const typeLabel = credType === 'academic' ? 'Academic'
-        : credType === 'certification' ? 'Certification'
-        : 'Work Experience';
+          : credType === 'certification' ? 'Certification'
+              : 'Work Experience';
 
       const newCredential: Credential = {
         id: generateId(),
@@ -264,24 +287,25 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
         sha256Hash: fullHash,
         ownerName: user?.name ?? '',
         ownerWallet: user?.walletAddress ?? '',
-        // File metadata for preview functionality
+        // File metadata for local preview fallback
         fileKey: `file_${generateId()}`,
         fileName: file.name,
         fileType: file.type,
+        // IPFS
+        ipfsCid: cid,
+        ipfsGatewayUrl: gatewayUrl,
       };
 
       await addCredential(newCredential);
-      
-      // Save the file blob to IndexedDB for later preview
+
       if (user) {
         try {
           await saveCredentialFile(user.walletAddress, newCredential.id, file);
         } catch (err) {
-          console.error('Failed to save credential file to storage:', err);
-          // Don't fail the entire flow if file storage fails
+          console.error('Failed to save credential file to IndexedDB:', err);
         }
       }
-      
+
       setStep('done');
     } catch {
       setError('Failed to process file. Please try again.');
@@ -296,6 +320,7 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
     setInstitution('');
     setIssueDate('');
     setHash('');
+    setIpfsCid('');
     setError('');
     setCredType('academic');
     onClose();
@@ -304,110 +329,132 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
   if (!isOpen) return null;
 
   return (
-    <div className={styles.backdrop} onClick={handleClose}>
-      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+      <div className={styles.backdrop} onClick={handleClose}>
+        <div className={styles.modal} onClick={e => e.stopPropagation()}>
 
-        <div className={styles.header}>
-          <div>
-            <div className={styles.title}>Add Credential</div>
-            <div className={styles.subtitle}>Upload a document to add to your vault</div>
-          </div>
-          <button className={styles.closeBtn} onClick={handleClose}>✕</button>
-        </div>
-
-        {step === 'form' && (
-          <>
-            {/* 1. Name + Institution */}
-            <div className={styles.fields}>
-              <div className={styles.field}>
-                <label className={styles.label}>Credential name</label>
-                <input className={styles.input} placeholder={namePlaceholder} value={name} onChange={e => setName(e.target.value)} />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label}>{institutionLabel}</label>
-                <input className={styles.input} placeholder={institutionPlaceholder} value={institution} onChange={e => setInstitution(e.target.value)} />
-              </div>
+          <div className={styles.header}>
+            <div>
+              <div className={styles.title}>Add Credential</div>
+              <div className={styles.subtitle}>Upload a document to add to your vault</div>
             </div>
+            <button className={styles.closeBtn} onClick={handleClose}>✕</button>
+          </div>
 
-            {/* 2. File upload */}
-            <div className={styles.field}>
-              <label className={styles.label}>Document</label>
-              {file ? (
-                <FilePreview file={file} onRemove={() => setFile(null)} />
-              ) : (
-                <div
-                  className={`${styles.dropzone} ${dragOver ? styles.dragOver : ''}`}
-                  onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.png,.jpg,.jpeg,.webp"
-                    style={{ display: 'none' }}
-                    onChange={e => { const f = e.target.files?.[0]; if (f) acceptFile(f); }}
-                  />
-                  <div className={styles.dropIcon}>⬆</div>
-                  <div className={styles.dropLabel}>Drag & drop or click to browse</div>
-                  <div className={styles.dropSub}>PDF, PNG, JPG, WebP · up to 50 MB</div>
+          {step === 'form' && (
+              <>
+                {/* 1. Name + Institution */}
+                <div className={styles.fields}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Credential name</label>
+                    <input className={styles.input} placeholder={namePlaceholder} value={name} onChange={e => setName(e.target.value)} />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>{institutionLabel}</label>
+                    <input className={styles.input} placeholder={institutionPlaceholder} value={institution} onChange={e => setInstitution(e.target.value)} />
+                  </div>
                 </div>
-              )}
-            </div>
 
-            {/* 3. Type */}
-            <div className={styles.field}>
-              <label className={styles.label}>Type</label>
-              <select
-                className={styles.input}
-                value={credType}
-                onChange={e => setCredType(e.target.value as CredentialType)}
-              >
-                <option value="academic">🎓 Academic</option>
-                <option value="certification">📜 Certification</option>
-                <option value="work">💼 Work Experience</option>
-              </select>
-            </div>
+                {/* 2. File upload */}
+                <div className={styles.field}>
+                  <label className={styles.label}>Document</label>
+                  {file ? (
+                      <FilePreview file={file} onRemove={() => setFile(null)} />
+                  ) : (
+                      <div
+                          className={`${styles.dropzone} ${dragOver ? styles.dragOver : ''}`}
+                          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                          onDragLeave={() => setDragOver(false)}
+                          onDrop={handleDrop}
+                          onClick={() => fileInputRef.current?.click()}
+                      >
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".pdf,.png,.jpg,.jpeg,.webp"
+                            style={{ display: 'none' }}
+                            onChange={e => { const f = e.target.files?.[0]; if (f) acceptFile(f); }}
+                        />
+                        <div className={styles.dropIcon}>⬆</div>
+                        <div className={styles.dropLabel}>Drag & drop or click to browse</div>
+                        <div className={styles.dropSub}>PDF, PNG, JPG, WebP · up to 50 MB</div>
+                      </div>
+                  )}
+                </div>
 
-            {/* 4. Date */}
-            <div className={styles.field}>
-              <label className={styles.label}>{dateLabel}</label>
-              <DatePickerPopover value={issueDate} onChange={setIssueDate} />
-            </div>
+                {/* 3. Type */}
+                <div className={styles.field}>
+                  <label className={styles.label}>Type</label>
+                  <select
+                      className={styles.input}
+                      value={credType}
+                      onChange={e => setCredType(e.target.value as CredentialType)}
+                  >
+                    <option value="academic">🎓 Academic</option>
+                    <option value="certification">📜 Certification</option>
+                    <option value="work">💼 Work Experience</option>
+                  </select>
+                </div>
 
-            {error && <div className={styles.error}>{error}</div>}
+                {/* 4. Date */}
+                <div className={styles.field}>
+                  <label className={styles.label}>{dateLabel}</label>
+                  <DatePickerPopover value={issueDate} onChange={setIssueDate} />
+                </div>
 
-            <div className={styles.actions}>
-              <button className={styles.btnCancel} onClick={handleClose}>Cancel</button>
-              <button className={styles.btnPrimary} onClick={handleSubmit}>Add to Vault →</button>
-            </div>
-          </>
-        )}
+                {error && <div className={styles.error}>{error}</div>}
 
-        {step === 'hashing' && (
-          <div className={styles.processing}>
-            <div className={styles.spinner} />
-            <div className={styles.processingLabel}>Computing SHA-256 hash…</div>
-            <div className={styles.processingSub}>This only takes a moment</div>
-          </div>
-        )}
+                <div className={styles.actions}>
+                  <button className={styles.btnCancel} onClick={handleClose}>Cancel</button>
+                  <button className={styles.btnPrimary} onClick={handleSubmit}>Add to Vault →</button>
+                </div>
+              </>
+          )}
 
-        {step === 'done' && (
-          <div className={styles.success}>
-            <div className={styles.successIcon}>✓</div>
-            <div className={styles.successTitle}>Credential added</div>
-            <div className={styles.successSub}>
-              Added to your vault with <span className={styles.pendingBadge}>Pending</span> status. An admin will review and anchor it to Cardano.
-            </div>
-            <div className={styles.hashRow}>
-              <span className={styles.hashLabel}>SHA-256</span>
-              <span className={styles.hashValue}>{hash.slice(0, 16)}…{hash.slice(-16)}</span>
-            </div>
-            <button className={styles.btnPrimary} onClick={handleClose}>Back to vault</button>
-          </div>
-        )}
+          {step === 'hashing' && (
+              <div className={styles.processing}>
+                <div className={styles.spinner} />
+                <div className={styles.processingLabel}>Computing SHA-256 hash…</div>
+                <div className={styles.processingSub}>This only takes a moment</div>
+              </div>
+          )}
+
+          {step === 'uploading' && (
+              <div className={styles.processing}>
+                <div className={styles.spinner} />
+                <div className={styles.processingLabel}>Uploading to IPFS…</div>
+                <div className={styles.processingSub}>Storing your document on a decentralised network</div>
+              </div>
+          )}
+
+          {step === 'done' && (
+              <div className={styles.success}>
+                <div className={styles.successIcon}>✓</div>
+                <div className={styles.successTitle}>Credential added</div>
+                <div className={styles.successSub}>
+                  Added to your vault with <span className={styles.pendingBadge}>Pending</span> status. An admin will review and anchor it to Cardano.
+                </div>
+                <div className={styles.hashRow}>
+                  <span className={styles.hashLabel}>SHA-256</span>
+                  <span className={styles.hashValue}>{hash.slice(0, 16)}…{hash.slice(-16)}</span>
+                </div>
+                {ipfsCid && (
+                    <div className={styles.hashRow}>
+                      <span className={styles.hashLabel}>IPFS CID</span>
+                      <a
+                          className={styles.hashValue}
+                          href={`https://ipfs.io/ipfs/${ipfsCid}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="View on IPFS gateway"
+                      >
+                        {ipfsCid.slice(0, 10)}…{ipfsCid.slice(-6)}
+                      </a>
+                    </div>
+                )}
+                <button className={styles.btnPrimary} onClick={handleClose}>Back to vault</button>
+              </div>
+          )}
+        </div>
       </div>
-    </div>
   );
 }

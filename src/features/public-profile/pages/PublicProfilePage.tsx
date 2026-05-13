@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useAuth } from '../../auth/context/useAuth';
-import type { Credential, ShareLinkRecord } from '../../../shared/types';
-import { StatusBadge } from '../../../shared/components/ui/StatusBadge';
+import { useAuth } from '../../auth';
+import type { Credential, ShareLinkRecord } from '../../../shared';
+import { StatusBadge } from '../../../shared';
 import { findShareLink, markShareLinkViewed } from '../../../shared/utils/shareLinks';
 import { previewCredentialFile } from '../../../shared/utils/filePreview';
 import styles from './PublicProfilePage.module.css';
@@ -34,7 +34,7 @@ export function PublicProfilePage({ publicProfileWallet }: PublicProfilePageProp
   const requestedWallet = searchParams.get('wallet') ?? '';
   const requestedToken = searchParams.get('token') ?? '';
   const ownerWallet = user?.walletAddress ?? '';
-  
+
   // Determine if this is a direct public profile route or a share link
   const isDirectProfileRoute = Boolean(publicProfileWallet);
   const initialShare = requestedWallet && requestedToken ? findShareLink(requestedWallet, requestedToken) : null;
@@ -46,7 +46,7 @@ export function PublicProfilePage({ publicProfileWallet }: PublicProfilePageProp
   // Poll for revocations (catches same-tab changes) and listen for storage events (cross-tab)
   useEffect(() => {
     if (!requestedWallet || !requestedToken) return;
-    
+
     // Polling: check status every 500ms to catch revocations in real-time
     const interval = setInterval(() => {
       const latest = findShareLink(requestedWallet, requestedToken);
@@ -61,7 +61,7 @@ export function PublicProfilePage({ publicProfileWallet }: PublicProfilePageProp
       }
     };
     window.addEventListener('storage', handler);
-    
+
     return () => {
       clearInterval(interval);
       window.removeEventListener('storage', handler);
@@ -96,18 +96,22 @@ export function PublicProfilePage({ publicProfileWallet }: PublicProfilePageProp
   }, [activeWallet, isSharedView, isDirectProfileRoute, shareRecord]);
 
   const handleCardClick = async (credential: Credential) => {
-    // Only attempt preview if file info is available
+    // Prefer IPFS — works for any viewer, not just the owner's browser
+    if (credential.ipfsGatewayUrl) {
+      window.open(credential.ipfsGatewayUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    // Fallback: local IndexedDB blob (only works on the owner's browser)
     if (!credential.fileKey || !credential.fileName || !credential.fileType) {
       return;
     }
-
     setPreviewingId(credential.id);
     try {
       await previewCredentialFile(
-        activeWallet,
-        credential.id,
-        credential.fileName,
-        credential.fileType
+          activeWallet,
+          credential.id,
+          credential.fileName,
+          credential.fileType
       );
     } catch (error) {
       console.error('Failed to preview file:', error);
@@ -118,22 +122,22 @@ export function PublicProfilePage({ publicProfileWallet }: PublicProfilePageProp
 
   if (shareDenied) {
     return (
-      <div className={styles.page}>
-        <div className={styles.watermark}>ACCESS DENIED</div>
+        <div className={styles.page}>
+          <div className={styles.watermark}>ACCESS DENIED</div>
 
-        <div className={styles.contentArea}>
-          <div className={styles.deniedCard}>
-            <div className={styles.deniedTitle}>Access Denied</div>
-            <p className={styles.deniedText}>
-              This public profile link has been revoked or is no longer valid.
-            </p>
-            <p className={styles.deniedMeta}>
-              {requestedWallet && <span>Wallet: {formatShortWallet(requestedWallet)}</span>}
-              {requestedToken && <span>Token: {requestedToken.slice(0, 12)}…</span>}
-            </p>
+          <div className={styles.contentArea}>
+            <div className={styles.deniedCard}>
+              <div className={styles.deniedTitle}>Access Denied</div>
+              <p className={styles.deniedText}>
+                This public profile link has been revoked or is no longer valid.
+              </p>
+              <p className={styles.deniedMeta}>
+                {requestedWallet && <span>Wallet: {formatShortWallet(requestedWallet)}</span>}
+                {requestedToken && <span>Token: {requestedToken.slice(0, 12)}…</span>}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
     );
   }
 
@@ -141,71 +145,71 @@ export function PublicProfilePage({ publicProfileWallet }: PublicProfilePageProp
   const walletDisplayName = isDirectProfileRoute ? formatShortWallet(publicProfileWallet) : (user?.name ?? 'Student');
 
   return (
-    <div className={styles.page}>
-      <div className={styles.watermark}>{isDirectProfileRoute ? 'PUBLIC PROFILE' : (isSharedView ? 'PUBLIC PROFILE' : 'RECRUITER VIEW')}</div>
+      <div className={styles.page}>
+        <div className={styles.watermark}>{isDirectProfileRoute ? 'PUBLIC PROFILE' : (isSharedView ? 'PUBLIC PROFILE' : 'RECRUITER VIEW')}</div>
 
-      <div className={styles.contentArea}>
-        <div className={styles.banner}>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <circle cx="8" cy="6" r="2.5" />
-            <path d="M3 13c0-2.5 2.2-4 5-4s5 1.5 5 4" />
-          </svg>
-          {isDirectProfileRoute
-            ? 'This is a public profile view. Only verified credentials are displayed. Click any card to preview.'
-            : isSharedView
-            ? `Shared access for ${shareRecord?.recipientName ?? 'your recipient'}.`
-            : 'You are viewing your public profile as a recruiter would see it.'}
-        </div>
-
-        <div className={styles.topbar}>
-          <h2 className={styles.heading}>
+        <div className={styles.contentArea}>
+          <div className={styles.banner}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="8" cy="6" r="2.5" />
+              <path d="M3 13c0-2.5 2.2-4 5-4s5 1.5 5 4" />
+            </svg>
             {isDirectProfileRoute
-              ? `${walletDisplayName} · Public Profile`
-              : isSharedView
-              ? `${user?.name ?? 'Student'} · Public Profile`
-              : `${user?.name ?? 'Your Profile'} · Verified Profile`}
-          </h2>
-        </div>
-
-        <div className={styles.grid}>
-          {publicCredentials.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>
-              {isDirectProfileRoute
-                ? 'No verified credentials available for this profile.'
+                ? 'This is a public profile view. Only verified credentials are displayed. Click any card to preview.'
                 : isSharedView
-                ? 'No verified credentials are available for this link.'
-                : 'No verified credentials yet.'}
-            </p>
-          ) : (
-            publicCredentials.map(cred => (
-              <article 
-                key={cred.id} 
-                className={styles.publicCard}
-                onClick={() => handleCardClick(cred)}
-                style={{
-                  cursor: cred.fileKey ? 'pointer' : 'default',
-                  opacity: previewingId === cred.id ? 0.7 : 1,
-                  transition: 'opacity 0.2s',
-                }}
-              >
-                <div className={styles.publicCardTop}>
-                  <div>
-                    <div className={styles.publicName}>{cred.name}</div>
-                    <div className={styles.publicInst}>{cred.institution} · {cred.year}</div>
-                  </div>
-                  <StatusBadge status={cred.status} />
-                </div>
-                <div className={styles.publicMeta}>{cred.issuedDate}</div>
-                {cred.fileKey && (
-                  <div style={{ marginTop: '12px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                    📎 {cred.fileName ? 'Click to view' : 'File attached'}
-                  </div>
-                )}
-              </article>
-            ))
-          )}
+                    ? `Shared access for ${shareRecord?.recipientName ?? 'your recipient'}.`
+                    : 'You are viewing your public profile as a recruiter would see it.'}
+          </div>
+
+          <div className={styles.topbar}>
+            <h2 className={styles.heading}>
+              {isDirectProfileRoute
+                  ? `${walletDisplayName} · Public Profile`
+                  : isSharedView
+                      ? `${user?.name ?? 'Student'} · Public Profile`
+                      : `${user?.name ?? 'Your Profile'} · Verified Profile`}
+            </h2>
+          </div>
+
+          <div className={styles.grid}>
+            {publicCredentials.length === 0 ? (
+                <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>
+                  {isDirectProfileRoute
+                      ? 'No verified credentials available for this profile.'
+                      : isSharedView
+                          ? 'No verified credentials are available for this link.'
+                          : 'No verified credentials yet.'}
+                </p>
+            ) : (
+                publicCredentials.map(cred => (
+                    <article
+                        key={cred.id}
+                        className={styles.publicCard}
+                        onClick={() => handleCardClick(cred)}
+                        style={{
+                          cursor: (cred.ipfsGatewayUrl || cred.fileKey) ? 'pointer' : 'default',
+                          opacity: previewingId === cred.id ? 0.7 : 1,
+                          transition: 'opacity 0.2s',
+                        }}
+                    >
+                      <div className={styles.publicCardTop}>
+                        <div>
+                          <div className={styles.publicName}>{cred.name}</div>
+                          <div className={styles.publicInst}>{cred.institution} · {cred.year}</div>
+                        </div>
+                        <StatusBadge status={cred.status} />
+                      </div>
+                      <div className={styles.publicMeta}>{cred.issuedDate}</div>
+                      {(cred.ipfsGatewayUrl || cred.fileKey) && (
+                          <div style={{ marginTop: '12px', fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                            📎 {cred.fileName ? 'Click to view' : 'File attached'}
+                          </div>
+                      )}
+                    </article>
+                ))
+            )}
+          </div>
         </div>
       </div>
-    </div>
   );
 }
