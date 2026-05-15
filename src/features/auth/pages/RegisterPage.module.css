@@ -30,6 +30,7 @@
   color: #ffffff;
   letter-spacing: 1px;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .logo span {
@@ -40,12 +41,14 @@
   font-size: 32px;
   font-weight: 600;
   color: #f1f5f9;
+  text-align: center;
 }
 
 .sub {
   font-size: 16px;
   color: #94a3b8;
   margin-top: -8px;
+  text-align: center;
 }
 
 .stepLabel {
@@ -54,6 +57,7 @@
   color: #378ADD;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  text-align: center;
 }
 
 .walletList {

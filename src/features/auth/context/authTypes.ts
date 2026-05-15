@@ -2,7 +2,6 @@ export interface UserProfile {
   walletAddress: string;
   name: string;
   email: string;
-  institution: string;
   registeredAt: string;
 }
 
