@@ -12,4 +12,6 @@ export interface AuthContextType {
   register: (profile: UserProfile) => void;
   logout: () => void;
   isRegistered: (address: string) => boolean;
+  walletDisconnected: boolean;
+  setWalletDisconnected: (val: boolean) => void;
 }

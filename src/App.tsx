@@ -11,6 +11,7 @@ import { SharePage } from './features/share';
 import { PublicProfilePage } from './features/public-profile';
 import { SettingsPage } from './features/settings';
 import { VerifyPage } from './features/verify';
+import { WalletReconnectModal } from './features/auth/components/WalletReconnectModal';
 import styles from './App.module.css';
 
 type AuthView = 'login' | 'register';
@@ -26,25 +27,28 @@ function parseProfileRoute() {
 }
 
 function AppContent() {
-  const { user } = useAuth();
+  const { user, walletDisconnected } = useAuth();
   const { active, navigate } = useNavigation('vault');
   const [authView, setAuthView] = useState<AuthView>('login');
   const shareParams = new URLSearchParams(window.location.search);
   const isShareLink = Boolean(shareParams.get('wallet') && shareParams.get('token'));
   const publicProfileWallet = parseProfileRoute();
 
+  // Public routes — never show reconnect modal
   if (isVerifyRoute()) return <VerifyPage />;
-
-  if (publicProfileWallet) {
-    return <PublicProfilePage publicProfileWallet={publicProfileWallet} />;
-  }
-
+  if (publicProfileWallet) return <PublicProfilePage publicProfileWallet={publicProfileWallet} />;
   if (isShareLink) return <PublicProfilePage />;
 
+  // Not logged in
   if (!user) {
     return authView === 'login'
       ? <LoginPage onNavigateRegister={() => setAuthView('register')} />
       : <RegisterPage onNavigateLogin={() => setAuthView('login')} />;
+  }
+
+  // Logged in but wallet disconnected — show modal over the app
+  if (walletDisconnected) {
+    return <WalletReconnectModal />;
   }
 
   return (

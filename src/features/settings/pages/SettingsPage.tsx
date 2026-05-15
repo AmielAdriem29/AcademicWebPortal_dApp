@@ -111,13 +111,28 @@ export function SettingsPage() {
     const [deleted, setDeleted] = useState(false);
 
     useEffect(() => {
-        const addressPromise = connected && wallet
-            ? wallet.getChangeAddress()
-            : Promise.resolve(null);
+        let cancelled = false;
 
-        addressPromise
-            .then(setWalletAddress)
-            .catch(() => setWalletAddress(null));
+        const fetchAddress = async (retries = 3): Promise<void> => {
+            if (!connected || !wallet) {
+                if (!cancelled) setWalletAddress(null);
+                return;
+            }
+            try {
+                const address = await wallet.getChangeAddress();
+                if (!cancelled) setWalletAddress(address);
+            } catch {
+                if (retries > 0 && !cancelled) {
+                    setTimeout(() => fetchAddress(retries - 1), 500);
+                } else {
+                    if (!cancelled) setWalletAddress(null);
+                }
+            }
+        };
+
+        fetchAddress();
+
+        return () => { cancelled = true; };
     }, [connected, wallet]);
 
     useEffect(() => {
