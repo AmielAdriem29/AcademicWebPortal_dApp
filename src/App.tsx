@@ -12,6 +12,7 @@ import { PublicProfilePage } from './features/public-profile';
 import { SettingsPage } from './features/settings';
 import { VerifyPage } from './features/verify';
 import { WalletReconnectModal } from './features/auth/components/WalletReconnectModal';
+import { InstitutionDashboardPage, InstitutionPendingPage } from './features/institution';
 import styles from './App.module.css';
 
 type AuthView = 'login' | 'register';
@@ -28,7 +29,10 @@ function parseProfileRoute() {
 
 function AppContent() {
   const { user, walletDisconnected } = useAuth();
-  const { active, navigate } = useNavigation('vault');
+  const isInstitution = user?.accountType === 'institution';
+  const { active, navigate } = useNavigation(
+    isInstitution ? 'institution-dashboard' : 'vault'
+  );
   const [authView, setAuthView] = useState<AuthView>('login');
   const shareParams = new URLSearchParams(window.location.search);
   const isShareLink = Boolean(shareParams.get('wallet') && shareParams.get('token'));
@@ -56,10 +60,14 @@ function AppContent() {
       <div className={styles.app}>
         <Sidebar active={active} onNavigate={navigate} />
         <main className={styles.content}>
+          {/* Holder routes */}
           {active === 'vault'    && <VaultPage />}
           {active === 'share'    && <SharePage />}
           {active === 'public'   && <PublicProfilePage />}
           {active === 'settings' && <SettingsPage />}
+          {/* Institution routes */}
+          {active === 'institution-dashboard' && <InstitutionDashboardPage />}
+          {active === 'institution-pending'   && <InstitutionPendingPage />}
         </main>
       </div>
     </CredentialProvider>

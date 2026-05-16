@@ -4,6 +4,7 @@ export interface Credential {
   id: string;
   name: string;
   institution: string;
+  institutionWallet?: string;
   year: number;
   logoText: string;
   logoColor?: string;
@@ -47,4 +48,10 @@ export interface ShareLinkRecord {
   status: ShareLinkStatus;
 }
 
-export type NavSection = 'vault' | 'share' | 'public' | 'settings';
+export type NavSection =
+  | 'vault'
+  | 'share'
+  | 'public'
+  | 'settings'
+  | 'institution-dashboard'
+  | 'institution-pending';

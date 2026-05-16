@@ -27,6 +27,13 @@
   filter: drop-shadow(0 0 8px rgba(55, 138, 221, 0.3));
 }
 
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
 .navItem {
   width: 100%;
   padding: 13px 16px;

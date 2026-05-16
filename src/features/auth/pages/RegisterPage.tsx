@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWallet, useWalletList } from '@meshsdk/react';
 import { useAuth } from '../context/useAuth';
 import type { UserProfile } from '../context/authTypes';
+import { getInstitutionByWallet } from '../../../constants/institutions';
 import styles from './RegisterPage.module.css';
 
 interface Props {
@@ -15,6 +16,30 @@ export function RegisterPage({ onNavigateLogin }: Props) {
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ name: '', email: '' });
+  const [detectedInstitution, setDetectedInstitution] = useState<string | null>(null);
+
+  // Once wallet connects, resolve address and check if institution
+  useEffect(() => {
+    if (!connected || !wallet) return;
+
+    let cancelled = false;
+
+    const resolveAddress = async () => {
+      try {
+        const address = await wallet.getChangeAddress();
+        if (cancelled || !address) return;
+        const institution = getInstitutionByWallet(address);
+        if (!cancelled) {
+          setDetectedInstitution(institution?.name ?? null);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    resolveAddress();
+    return () => { cancelled = true; };
+  }, [connected, wallet]);
 
   const handleConnect = async (walletId: string) => {
     setError('');
@@ -29,33 +54,46 @@ export function RegisterPage({ onNavigateLogin }: Props) {
   };
 
   const handleRegister = async () => {
-    if (!connected || !wallet) return;
-    if (!form.name || !form.email) {
-      setError('Please fill in all fields.');
-      return;
-    }
-    setError('');
+  if (!connected || !wallet) return;
+  if (!form.name || !form.email) {
+    setError('Please fill in all fields.');
+    return;
+  }
+  setError('');
+
+  // Retry getChangeAddress up to 3 times with 500ms delay
+  let address: string | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const address = await wallet.getChangeAddress();
-      if (!address) {
-        setError('Could not retrieve wallet address. Try reconnecting.');
-        return;
-      }
-      if (isRegistered(address)) {
-        setError('This wallet is already registered. Please sign in.');
-        return;
-      }
-      const profile: UserProfile = {
-        walletAddress: address,
-        name: form.name,
-        email: form.email,
-        registeredAt: new Date().toISOString(),
-      };
-      register(profile);
+      address = await wallet.getChangeAddress();
+      if (address) break;
     } catch {
-      setError('Could not retrieve wallet address. Try reconnecting.');
+      if (attempt < 2) {
+        await new Promise(res => setTimeout(res, 500));
+      }
     }
+  }
+
+  if (!address) {
+    setError('Could not retrieve wallet address. Try reconnecting.');
+    return;
+  }
+
+  if (isRegistered(address)) {
+    setError('This wallet is already registered. Please sign in.');
+    return;
+  }
+
+  const institution = getInstitutionByWallet(address);
+  const profile: UserProfile = {
+    walletAddress: address,
+    name: form.name,
+    email: form.email,
+    registeredAt: new Date().toISOString(),
+    accountType: institution ? 'institution' : 'holder',
   };
+  register(profile);
+};
 
   return (
     <div className={styles.page}>
@@ -91,6 +129,13 @@ export function RegisterPage({ onNavigateLogin }: Props) {
         ) : (
           <>
             <div className={styles.connectedBadge}>✓ Wallet Connected</div>
+
+            {detectedInstitution && (
+              <div className={styles.institutionBadge}>
+                🏛 Institution detected: <strong>{detectedInstitution}</strong>
+              </div>
+            )}
+
             <p className={styles.stepLabel}>Step 2 — Fill in your profile</p>
             <div className={styles.fields}>
               <div className={styles.field}>

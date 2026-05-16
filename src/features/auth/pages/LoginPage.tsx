@@ -28,24 +28,76 @@ export function LoginPage({ onNavigateRegister }: Props) {
     }
   };
 
+  function hexToBech32(hex: string): string {
+    const CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+
+    function polymod(values: number[]): number {
+      const GEN = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
+      let chk = 1;
+      for (const v of values) {
+        const b = chk >> 25;
+        chk = ((chk & 0x1ffffff) << 5) ^ v;
+        for (let i = 0; i < 5; i++) chk ^= (b >> i) & 1 ? GEN[i] : 0;
+      }
+      return chk;
+    }
+
+    function hrpExpand(hrp: string): number[] {
+      return [...hrp].map(c => c.charCodeAt(0) >> 5)
+        .concat([0])
+        .concat([...hrp].map(c => c.charCodeAt(0) & 31));
+    }
+
+    function convertbits(data: number[], from: number, to: number): number[] {
+      let acc = 0, bits = 0;
+      const ret: number[] = [];
+      const maxv = (1 << to) - 1;
+      for (const v of data) {
+        acc = ((acc << from) | v);
+        bits += from;
+        while (bits >= to) { bits -= to; ret.push((acc >> bits) & maxv); }
+      }
+      if (bits) ret.push((acc << (to - bits)) & maxv);
+      return ret;
+    }
+
+    const hrp = 'addr_test';
+    const raw = Array.from(Buffer.from(hex, 'hex'));
+    const data = convertbits(raw, 8, 5);
+    const combined = [...data, 0, 0, 0, 0, 0, 0];
+    const mod = polymod([...hrpExpand(hrp), ...combined]) ^ 1;
+    for (let i = 0; i < 6; i++) combined[combined.length - 6 + i] = (mod >> (5 * (5 - i))) & 31;
+    return hrp + '1' + combined.map(d => CHARSET[d]).join('');
+  }
+
   const handleLogin = async () => {
     if (!connected || !wallet) return;
     setError('');
 
     try {
-      const address = await wallet.getChangeAddress();
-      if (!address) {
+      const used = await wallet.getUsedAddresses();
+      const raw = used && used.length > 0
+        ? used[0]
+        : await wallet.getChangeAddress();
+
+      if (!raw) {
         setError('Could not retrieve wallet address. Try reconnecting.');
         return;
       }
+
+      // MeshSDK returns CBOR hex — decode to bech32 for localStorage lookup
+      const address = raw.startsWith('addr') ? raw : hexToBech32(raw);
+      console.log('resolved address:', address);
+
       const profile = login(address);
       if (!profile) {
         setError('No account found for this wallet. Please register first.');
       }
-    } catch {
+    } catch (e) {
+      console.error(e);
       setError('Could not retrieve wallet address. Try reconnecting.');
     }
-  };
+};
 
   return (
     <div className={styles.page}>

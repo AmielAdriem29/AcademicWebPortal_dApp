@@ -1,3 +1,4 @@
+import { useAuth } from '../../../features/auth/context/useAuth';
 import type { NavSection } from '../../types';
 import styles from './Sidebar.module.css';
 
@@ -7,7 +8,7 @@ interface NavItemDef {
   icon: React.ReactNode;
 }
 
-const NAV_ITEMS: NavItemDef[] = [
+const HOLDER_NAV: NavItemDef[] = [
   {
     id: 'vault',
     label: 'Credential Vault',
@@ -44,6 +45,31 @@ const NAV_ITEMS: NavItemDef[] = [
   },
 ];
 
+const INSTITUTION_NAV: NavItemDef[] = [
+  {
+    id: 'institution-dashboard',
+    label: 'Dashboard',
+    icon: (
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <rect x="1" y="1" width="6" height="6" rx="1" />
+        <rect x="9" y="1" width="6" height="6" rx="1" />
+        <rect x="1" y="9" width="6" height="6" rx="1" />
+        <rect x="9" y="9" width="6" height="6" rx="1" />
+      </svg>
+    ),
+  },
+  {
+    id: 'institution-pending',
+    label: 'Pending Queue',
+    icon: (
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="8" cy="8" r="6" />
+        <path d="M8 4v4l3 2" />
+      </svg>
+    ),
+  },
+];
+
 const SETTINGS_ITEM: NavItemDef = {
   id: 'settings',
   label: 'Settings',
@@ -60,7 +86,15 @@ interface Props {
   onNavigate: (section: NavSection) => void;
 }
 
-function NavItem({ item, isActive, onNavigate }: { item: NavItemDef; isActive: boolean; onNavigate: (s: NavSection) => void }) {
+function NavItem({
+  item,
+  isActive,
+  onNavigate,
+}: {
+  item: NavItemDef;
+  isActive: boolean;
+  onNavigate: (s: NavSection) => void;
+}) {
   return (
     <button
       className={`${styles.navItem} ${isActive ? styles.active : ''}`}
@@ -73,6 +107,10 @@ function NavItem({ item, isActive, onNavigate }: { item: NavItemDef; isActive: b
 }
 
 export function Sidebar({ active, onNavigate }: Props) {
+  const { user } = useAuth();
+  const isInstitution = user?.accountType === 'institution';
+  const navItems = isInstitution ? INSTITUTION_NAV : HOLDER_NAV;
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logo}>
@@ -80,13 +118,22 @@ export function Sidebar({ active, onNavigate }: Props) {
       </div>
 
       <nav className={styles.nav}>
-        {NAV_ITEMS.map(item => (
-          <NavItem key={item.id} item={item} isActive={active === item.id} onNavigate={onNavigate} />
+        {navItems.map(item => (
+          <NavItem
+            key={item.id}
+            item={item}
+            isActive={active === item.id}
+            onNavigate={onNavigate}
+          />
         ))}
       </nav>
 
       <div className={styles.bottomNav}>
-        <NavItem item={SETTINGS_ITEM} isActive={active === 'settings'} onNavigate={onNavigate} />
+        <NavItem
+          item={SETTINGS_ITEM}
+          isActive={active === 'settings'}
+          onNavigate={onNavigate}
+        />
       </div>
     </aside>
   );
