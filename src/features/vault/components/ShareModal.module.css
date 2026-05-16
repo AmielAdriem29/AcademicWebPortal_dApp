@@ -1,125 +1,138 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.72);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
-  border-radius: inherit;
+  z-index: 1000;
 }
 
 .modal {
-  background: var(--surface-0);
-  border-radius: var(--radius-lg);
-  padding: 2.5rem;
-  width: 520px;
-  border: 0.5px solid var(--border-subtle);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  background: rgba(17, 20, 29, 0.85);
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 2.25rem 2.5rem 2rem;
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
 }
 
 .title {
-  font-size: 26px;
-  font-weight: 500;
-  margin-bottom: 1.75rem;
+  font-size: 1.2rem;
+  font-weight: 600;
   color: var(--text-primary);
+  margin: 0;
 }
 
-.row {
+.field {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 .label {
-  font-size: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
   color: var(--text-secondary);
-}
-
-.select {
-  font-size: 18px;
-  font-family: var(--font-sans);
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  border: 0.5px solid var(--border-default);
-  background: var(--surface-1);
-  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
 }
 
 .input {
-  flex: 1;
-  font-size: 18px;
-  font-family: var(--font-sans);
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  border: 0.5px solid var(--border-default);
-  background: var(--surface-1);
+  background: rgba(27, 32, 43, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
   color: var(--text-primary);
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+
+.input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.input:focus {
+  border-color: var(--brand-primary);
+}
+
+.inputError {
+  border-color: #f87171;
+}
+
+.inputError:focus {
+  border-color: #f87171;
+}
+
+.warning {
+  font-size: 0.78rem;
+  color: #f87171;
 }
 
 .walletPill {
-  flex: 1;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  border: 0.5px solid var(--border-subtle);
-  background: var(--surface-1);
-  color: var(--text-secondary);
-  font-size: 16px;
-  word-break: break-all;
-}
-
-.linkBox {
-  background: var(--surface-1);
+  background: rgba(27, 32, 43, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
-  padding: 14px 16px;
-  font-size: 16px;
-  font-family: var(--font-mono);
+  padding: 0.7rem 1rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  margin-bottom: 20px;
-  word-break: break-all;
-}
-
-.error {
-  margin-bottom: 16px;
-  color: var(--status-revoked-text);
-  font-size: 15px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .actions {
   display: flex;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.btnOutline,
-.btnPrimary {
-  flex: 1;
-  padding: 14px;
-  font-size: 18px;
-  font-family: var(--font-sans);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-weight: 500;
-  transition: background 0.15s;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
 }
 
 .btnOutline {
-  border: 0.5px solid var(--border-default);
+  flex: 1;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   background: transparent;
-  color: var(--text-primary);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .btnOutline:hover {
-  background: var(--surface-1);
+  border-color: var(--brand-primary);
+  color: var(--text-primary);
 }
 
 .btnPrimary {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-md);
+  border: none;
   background: var(--brand-primary);
   color: #fff;
-  border: none;
+  font-size: 0.9rem;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
 }
 
-.btnPrimary:hover {
-  background: #0c447c;
+.btnPrimary:hover:not(:disabled) {
+  background: #2a6fb5;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useCredentials } from '../../credentials/context/useCredentials';
 import { CredentialCard } from '../components/CredentialCard';
 import { ShareModal } from '../components/ShareModal';
@@ -9,12 +10,26 @@ export function VaultPage() {
   const { credentials, isLoading } = useCredentials();
   const shareModal = useModal();
   const issuanceModal = useModal();
+  const [showSharedToast, setShowSharedToast] = useState(false);
 
   const verified = credentials.filter(c => c.status === 'verified').length;
   const pending  = credentials.filter(c => c.status === 'pending').length;
 
+  const handleShared = () => {
+    setShowSharedToast(true);
+    setTimeout(() => {
+      setShowSharedToast(false);
+    }, 4000);
+  };
+
   return (
     <div className={styles.page}>
+      {showSharedToast && (
+        <div className={styles.toast}>
+          Share link copied to clipboard!
+        </div>
+      )}
+
       <div className={styles.topbar}>
         <h2 className={styles.heading}>My Credential Vault</h2>
         <div style={{ display: 'flex', gap: '12px' }}>
@@ -72,7 +87,12 @@ export function VaultPage() {
         )}
       </div>
 
-      <ShareModal isOpen={shareModal.isOpen} onClose={shareModal.close} />
+      <ShareModal
+        key={shareModal.isOpen ? 'open' : 'closed'}
+        isOpen={shareModal.isOpen}
+        onClose={shareModal.close}
+        onShared={handleShared}
+      />
       <IssuanceModal isOpen={issuanceModal.isOpen} onClose={issuanceModal.close} />
     </div>
   );
