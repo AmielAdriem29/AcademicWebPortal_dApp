@@ -1,44 +1,70 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../auth/context/useAuth';
+import type { Credential } from '../../../shared/types';
 import styles from './InstitutionPages.module.css';
 
-interface PendingRow {
-  id: string;
-  credentialName: string;
-  holderName: string;
-  holderWallet: string;
-  submittedAt: string;
+const VAULT_KEY_PREFIX = 'chaincred_vault_';
+
+function getAllHolderCredentials(): Credential[] {
+  const all: Credential[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key?.startsWith(VAULT_KEY_PREFIX)) continue;
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw) as Credential[];
+      if (Array.isArray(parsed)) all.push(...parsed);
+    } catch {
+      // skip malformed entries
+    }
+  }
+  return all;
 }
 
-// Placeholder — will be replaced with Blockfrost queries in Step 3
-const MOCK_PENDING: PendingRow[] = [
-  {
-    id: '1',
-    credentialName: 'Bachelor of Science in Computer Science',
-    holderName: 'Pedro Reyes',
-    holderWallet: 'addr_test1abc...',
-    submittedAt: '2025-05-14',
-  },
-  {
-    id: '2',
-    credentialName: 'Certificate in Cybersecurity',
-    holderName: 'Ana Gomez',
-    holderWallet: 'addr_test1def...',
-    submittedAt: '2025-05-15',
-  },
-];
+function updateCredentialStatus(ownerWallet: string, credentialId: string, status: Credential['status']): void {
+  const key = `${VAULT_KEY_PREFIX}${ownerWallet}`;
+  const raw = localStorage.getItem(key);
+  if (!raw) return;
+  try {
+    const credentials = JSON.parse(raw) as Credential[];
+    const updated = credentials.map(c => c.id === credentialId ? { ...c, status } : c);
+    localStorage.setItem(key, JSON.stringify(updated));
+  } catch {
+    // skip malformed entries
+  }
+}
 
-type ConfirmAction = { row: PendingRow; type: 'approve' | 'reject' } | null;
+type ConfirmAction = { credential: Credential; type: 'approve' | 'reject' } | null;
 
 export function InstitutionPendingPage() {
   const { user } = useAuth();
-  const [pending, setPending] = useState<PendingRow[]>(MOCK_PENDING);
+  const walletAddress = user?.walletAddress ?? null;
+  const [pending, setPending] = useState<Credential[]>([]);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 
+  useEffect(() => {
+    if (!walletAddress) return;
+    void Promise.resolve().then(() => {
+        const all = getAllHolderCredentials();
+        setPending(
+        all.filter(c => c.institutionWallet === walletAddress && c.status === 'pending')
+        );
+    });
+    }, [walletAddress]);
+
   const handleConfirm = () => {
-    if (!confirmAction) return;
-    setPending(prev => prev.filter(r => r.id !== confirmAction.row.id));
+    if (!confirmAction || !walletAddress) return;
+    const { credential, type } = confirmAction;
+    if (!credential.ownerWallet) return;
+    updateCredentialStatus(credential.ownerWallet, credential.id, type === 'approve' ? 'verified' : 'rejected');
     setConfirmAction(null);
+
+    // reload pending list
+    const all = getAllHolderCredentials();
+    setPending(
+      all.filter(c => c.institutionWallet === walletAddress && c.status === 'pending')
+    );
   };
 
   return (
@@ -69,25 +95,25 @@ export function InstitutionPendingPage() {
                   </td>
                 </tr>
               ) : (
-                pending.map(row => (
-                  <tr key={row.id}>
-                    <td>{row.credentialName}</td>
+                pending.map(cred => (
+                  <tr key={cred.id}>
+                    <td>{cred.name}</td>
                     <td>
-                      <span className={styles.holderName}>{row.holderName}</span>
-                      <span className={styles.holderWallet}>{row.holderWallet}</span>
+                      <span className={styles.holderName}>{cred.ownerName ?? '—'}</span>
+                      <span className={styles.holderWallet}>{cred.ownerWallet ?? '—'}</span>
                     </td>
-                    <td>{row.submittedAt}</td>
+                    <td>{cred.issuedDate}</td>
                     <td>
                       <div className={styles.pendingActions}>
                         <button
                           className={styles.approveBtn}
-                          onClick={() => setConfirmAction({ row, type: 'approve' })}
+                          onClick={() => setConfirmAction({ credential: cred, type: 'approve' })}
                         >
                           Approve
                         </button>
                         <button
                           className={styles.rejectBtn}
-                          onClick={() => setConfirmAction({ row, type: 'reject' })}
+                          onClick={() => setConfirmAction({ credential: cred, type: 'reject' })}
                         >
                           Reject
                         </button>
@@ -111,10 +137,9 @@ export function InstitutionPendingPage() {
               {confirmAction.type === 'approve' ? 'Approve Credential?' : 'Reject Credential?'}
             </h2>
             <p className={styles.modalBody}>
-              You are about to{' '}
-              <strong>{confirmAction.type}</strong>{' '}
-              <strong>{confirmAction.row.credentialName}</strong> submitted by{' '}
-              <strong>{confirmAction.row.holderName}</strong>.{' '}
+              You are about to <strong>{confirmAction.type}</strong>{' '}
+              <strong>{confirmAction.credential.name}</strong> submitted by{' '}
+              <strong>{confirmAction.credential.ownerName ?? 'this holder'}</strong>.{' '}
               {confirmAction.type === 'approve'
                 ? 'This will be recorded on-chain as verified.'
                 : 'This action cannot be undone.'}
