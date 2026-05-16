@@ -1,0 +1,86 @@
+.page {
+  padding: 32px;
+  max-width: 900px;
+}
+
+.heading {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--color-text, #111);
+}
+
+.sub {
+  font-size: 0.9rem;
+  color: var(--color-text-muted, #666);
+  margin: 0 0 32px;
+}
+
+.section {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: var(--color-text, #111);
+}
+
+.empty {
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #888);
+  margin: 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.table th {
+  text-align: left;
+  padding: 8px 12px;
+  color: var(--color-text-muted, #666);
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  font-weight: 500;
+}
+
+.table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border, #f0f0f0);
+  color: var(--color-text, #111);
+}
+
+.actionBtn {
+  padding: 4px 12px;
+  border-radius: 5px;
+  border: none;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-weight: 500;
+  margin-right: 6px;
+}
+
+.approveBtn {
+  background: #16a34a;
+  color: #fff;
+}
+
+.approveBtn:hover {
+  background: #15803d;
+}
+
+.revokeBtn {
+  background: #dc2626;
+  color: #fff;
+}
+
+.revokeBtn:hover {
+  background: #b91c1c;
+}
