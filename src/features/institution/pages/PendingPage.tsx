@@ -45,12 +45,19 @@ export function InstitutionPendingPage() {
 
   useEffect(() => {
     if (!walletAddress) return;
-    void Promise.resolve().then(() => {
-        const all = getAllHolderCredentials();
-        setPending(
-        all.filter(c => c.institutionWallet === walletAddress && c.status === 'pending')
-        );
-    });
+
+    const read = () => {
+        void Promise.resolve().then(() => {
+            const all = getAllHolderCredentials();
+            setPending(
+            all.filter(c => c.institutionWallet === walletAddress && c.status === 'pending')
+            );
+        });
+    };
+
+    read(); // initial load
+    const interval = setInterval(read, 3000); // re-check every 3 seconds
+    return () => clearInterval(interval);
     }, [walletAddress]);
 
   const handleConfirm = () => {
