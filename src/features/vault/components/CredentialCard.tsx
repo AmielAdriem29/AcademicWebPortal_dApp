@@ -6,6 +6,7 @@ import { useCredentials } from '../../credentials';
 import { useAuth } from '../../auth';
 import { previewCredentialFile } from '../../../shared/utils/filePreview';
 import styles from './CredentialCard.module.css';
+import { resolveAddress } from '../../../shared/utils/walletAddress';
 
 interface Props {
   credential: Credential;
@@ -45,26 +46,32 @@ function DeleteModal({
   };
 
   const handleWalletConfirm = async () => {
-    if (!connected || !wallet) {
-      setError('Please connect your wallet first.');
+  if (!connected || !wallet) {
+    setError('Please connect your wallet first.');
+    return;
+  }
+  setError('');
+  try {
+    const raw = await wallet.getChangeAddress();
+    const rawStr = Array.isArray(raw) ? raw[0] : raw;
+    const resolved = resolveAddress(rawStr);
+    console.log('raw from wallet:', rawStr);
+    console.log('resolved:', resolved);
+    console.log('user.walletAddress:', user?.walletAddress);
+    console.log('match:', resolved === user?.walletAddress);
+
+    if (resolved !== user?.walletAddress) {
+      setError('Wrong wallet. Please connect the wallet associated with this account.');
       return;
     }
-    setError('');
-    try {
-      const address = await wallet.getChangeAddress();
-      const resolved = Array.isArray(address) ? address[0] : address;
-      if (resolved !== user?.walletAddress) {
-        setError('Wrong wallet. Please connect the wallet associated with this account.');
-        return;
-      }
-      setStep('deleting');
-      await deleteCredential(credential.id);
-      onDeleted();
-    } catch {
-      setError('Could not verify wallet. Make sure it is unlocked and try again.');
-      setStep('wallet');
-    }
-  };
+    setStep('deleting');
+    await deleteCredential(credential.id);
+    onDeleted();
+  } catch {
+    setError('Could not verify wallet. Make sure it is unlocked and try again.');
+    setStep('wallet');
+  }
+};
 
   return (
     <div className={styles.deleteModalBackdrop}>
@@ -167,6 +174,7 @@ export function CredentialCard({ credential }: Props) {
   const [editName, setEditName] = useState(name);
   const [editInstitution, setEditInstitution] = useState(institution);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
   const [hashCopied, setHashCopied] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
 
@@ -232,11 +240,19 @@ export function CredentialCard({ credential }: Props) {
 
   return (
     <>
+      {showDeleted && (
+        <div className={styles.toast}>✓ Credential deleted successfully</div>
+      )}
+
       {showDeleteModal && (
         <DeleteModal
           credential={credential}
           onCancel={() => setShowDeleteModal(false)}
-          onDeleted={() => setShowDeleteModal(false)}
+          onDeleted={() => {
+            setShowDeleteModal(false);
+            setShowDeleted(true);
+            setTimeout(() => setShowDeleted(false), 3000);
+          }}
         />
       )}
 

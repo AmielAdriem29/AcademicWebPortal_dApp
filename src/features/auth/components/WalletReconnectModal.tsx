@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useWallet, useWalletList } from '@meshsdk/react';
 import { useAuth } from '../context/useAuth';
+import { resolveAddress } from '../../../shared/utils/walletAddress';
 import styles from './WalletReconnectModal.module.css';
 
 const WALLET_KEY = 'chaincred_wallet';
@@ -16,11 +17,9 @@ export function WalletReconnectModal() {
     setError('');
     setConnecting(true);
     try {
-      // connect() triggers MeshSDK — this updates useWallet() state everywhere
       await connect(walletId);
       localStorage.setItem(WALLET_KEY, walletId);
 
-      // Give MeshSDK a tick to settle, then get the address and re-login
       setTimeout(async () => {
         try {
           const api = await window.cardano?.[walletId]?.enable();
@@ -29,11 +28,12 @@ export function WalletReconnectModal() {
             setConnecting(false);
             return;
           }
-          const address = await api.getChangeAddress();
-          if (address) {
+          const raw = await api.getChangeAddress();
+          if (raw) {
+            const address = resolveAddress(raw);
             const profile = login(address);
             if (profile) {
-              setWalletDisconnected(false); // hides modal, MeshSDK already updated
+              setWalletDisconnected(false);
             } else {
               setError('No account found for this wallet. Please log in again.');
               setConnecting(false);
