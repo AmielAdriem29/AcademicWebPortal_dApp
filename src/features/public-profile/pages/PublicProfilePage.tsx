@@ -167,8 +167,11 @@ export function PublicProfilePage({ publicProfileWallet }: PublicProfilePageProp
                   ? `${walletDisplayName} · Public Profile`
                   : isSharedView
                       ? `${user?.name ?? 'Student'} · Public Profile`
-                      : `${user?.name ?? 'Your Profile'} · Verified Profile`}
+                      : `${user?.name ?? 'Your Profile'} · Public Profile`}
             </h2>
+            {!isDirectProfileRoute && user?.email && (
+              <p className={styles.profileEmail}>{user.email}</p>
+            )}
           </div>
 
           <div className={styles.grid}>
