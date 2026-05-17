@@ -26,6 +26,69 @@ function generateId(): string {
   return `cred_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
+function CustomSelect({
+  value,
+  onChange,
+  options,
+  placeholder = 'Select an option',
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { label: string; value: string }[];
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selected = options.find(o => o.value === value);
+
+  const handleOpen = () => {
+    setOpen(o => !o);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div className={styles.selectContainer} ref={containerRef}>
+      <button
+        type="button"
+        className={`${styles.selectTrigger} ${open ? styles.selectTriggerOpen : ''}`}
+        onClick={handleOpen}
+      >
+        <span className={selected ? styles.selectValue : styles.selectPlaceholder}>
+          {selected ? selected.label : placeholder}
+        </span>
+        <span className={`${styles.selectChevron} ${open ? styles.selectChevronOpen : ''}`}>▾</span>
+      </button>
+
+      {open && (
+        <div className={styles.selectDropdown}>
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`${styles.selectOption} ${opt.value === value ? styles.selectOptionActive : ''}`}
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+            >
+              {opt.label}
+              {opt.value === value && <span className={styles.selectOptionCheck}>✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DatePickerPopover({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const today = new Date();
   const parsed = value ? new Date(value + 'T00:00:00') : null;
@@ -188,9 +251,9 @@ function FilePreview({ file, onRemove }: { file: File; onRemove: () => void }) {
 export function IssuanceModal({ isOpen, onClose }: Props) {
   const { addCredential } = useCredentials();
   const { user } = useAuth();
+
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
 
   const [step, setStep] = useState<Step>('form');
   const [dragOver, setDragOver] = useState(false);
@@ -203,6 +266,8 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
   const [error, setError] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const institutionOptions = INSTITUTIONS.map(i => ({ label: i.name, value: i.name }));
 
   const acceptFile = (f: File) => {
     const allowed = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
@@ -248,7 +313,6 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
       }
 
       const selectedInstitution = INSTITUTIONS.find(i => i.name === institution.trim());
-
       const logoText = institution.trim().slice(0, 3).toUpperCase();
       const dateStr = new Date(issueDate + 'T00:00:00').toLocaleDateString('en-US', {
         month: 'short', day: 'numeric', year: 'numeric',
@@ -297,7 +361,7 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
     setFile(null);
     setName('');
     setInstitution('');
-    setIssueDate('');
+    setIssueDate(todayStr);
     setHash('');
     setIpfsCid('');
     setError('');
@@ -332,18 +396,12 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
               </div>
               <div className={styles.field}>
                 <label className={styles.label}>Issuing institution</label>
-                <select
-                  className={styles.input}
+                <CustomSelect
                   value={institution}
-                  onChange={e => setInstitution(e.target.value)}
-                >
-                  <option value="">Select an institution</option>
-                  {INSTITUTIONS.map(i => (
-                    <option key={i.walletAddress} value={i.name}>
-                      {i.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setInstitution}
+                  options={institutionOptions}
+                  placeholder="Select an institution"
+                />
               </div>
             </div>
 
