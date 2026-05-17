@@ -97,6 +97,11 @@
   color: var(--text-tertiary, #4a5568);
 }
 
+.input[readonly] {
+  cursor: default;
+  pointer-events: none;
+}
+
 .walletInfo {
   display: flex;
   flex-direction: column;

@@ -17,12 +17,14 @@ function Field({
     onChange,
     placeholder = "",
     type = "text",
+    readOnly = false,
 }: {
     label: string;
     value: string;
-    onChange: (v: string) => void;
+    onChange?: (v: string) => void;
     placeholder?: string;
     type?: string;
+    readOnly?: boolean;
 }) {
     return (
         <div className={styles.field}>
@@ -31,8 +33,10 @@ function Field({
                 className={styles.input}
                 type={type}
                 value={value}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={readOnly ? undefined : (e) => onChange?.(e.target.value)}
                 placeholder={placeholder}
+                readOnly={readOnly}
+                style={readOnly ? { opacity: 0.7 } : undefined}
             />
         </div>
     );
@@ -189,17 +193,15 @@ export function SettingsPage() {
                     <SectionHeader label="Profile" />
                     <div className={styles.fieldGrid}>
                         <Field
-                            label="Display name"
+                            label="Name"
                             value={user?.name ?? ""}
-                            onChange={() => {}}
-                            placeholder="Your full name"
+                            readOnly
                         />
                         <Field
                             label="Email"
                             value={user?.email ?? ""}
-                            onChange={() => {}}
-                            placeholder="you@example.com"
                             type="email"
+                            readOnly
                         />
                     </div>
                 </section>
