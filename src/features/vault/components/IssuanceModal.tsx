@@ -188,13 +188,16 @@ function FilePreview({ file, onRemove }: { file: File; onRemove: () => void }) {
 export function IssuanceModal({ isOpen, onClose }: Props) {
   const { addCredential } = useCredentials();
   const { user } = useAuth();
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
 
   const [step, setStep] = useState<Step>('form');
   const [dragOver, setDragOver] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
   const [institution, setInstitution] = useState('');
-  const [issueDate, setIssueDate] = useState('');
+  const [issueDate, setIssueDate] = useState(todayStr);
   const [hash, setHash] = useState('');
   const [ipfsCid, setIpfsCid] = useState('');
   const [error, setError] = useState('');
