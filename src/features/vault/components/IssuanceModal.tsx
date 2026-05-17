@@ -13,7 +13,6 @@ interface Props {
 }
 
 type Step = 'form' | 'hashing' | 'uploading' | 'done';
-type CredentialType = 'academic' | 'certification' | 'work';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -195,7 +194,6 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
   const [institution, setInstitution] = useState('');
-  const [credType, setCredType] = useState<CredentialType>('academic');
   const [issueDate, setIssueDate] = useState('');
   const [hash, setHash] = useState('');
   const [ipfsCid, setIpfsCid] = useState('');
@@ -217,15 +215,6 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
     const f = e.dataTransfer.files[0];
     if (f) acceptFile(f);
   }, []);
-
-  const namePlaceholder = credType === 'academic' ? 'e.g. B.Sc. Computer Science'
-    : credType === 'certification' ? 'e.g. AWS Cloud Practitioner'
-    : 'e.g. Software Engineer Intern';
-
-  const institutionLabel = credType === 'work' ? 'Company / Organisation' : 'Issuing institution';
-  const institutionPlaceholder = credType === 'work' ? 'e.g. Acme Corp' : '';
-
-  const dateLabel = credType === 'work' ? 'Start date' : 'Issue date';
 
   const handleSubmit = async () => {
     if (!file || !name.trim() || !institution.trim() || !issueDate) {
@@ -262,10 +251,6 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
         month: 'short', day: 'numeric', year: 'numeric',
       });
 
-      const typeLabel = credType === 'academic' ? 'Academic'
-        : credType === 'certification' ? 'Certification'
-        : 'Work Experience';
-
       const newCredential: Credential = {
         id: generateId(),
         name: name.trim(),
@@ -276,7 +261,7 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
         status: 'pending',
         txHash: `sha256:${shortHash}`,
         issuedDate: dateStr,
-        extra: `${typeLabel} · Awaiting verification`,
+        extra: 'Awaiting verification',
         sha256Hash: fullHash,
         ownerName: user?.name ?? '',
         ownerWallet: user?.walletAddress ?? '',
@@ -313,7 +298,6 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
     setHash('');
     setIpfsCid('');
     setError('');
-    setCredType('academic');
     onClose();
   };
 
@@ -338,34 +322,25 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
                 <label className={styles.label}>Credential name</label>
                 <input
                   className={styles.input}
-                  placeholder={namePlaceholder}
+                  placeholder="e.g. B.Sc. Computer Science"
                   value={name}
                   onChange={e => setName(e.target.value)}
                 />
               </div>
               <div className={styles.field}>
-                <label className={styles.label}>{institutionLabel}</label>
-                {credType === 'work' ? (
-                  <input
-                    className={styles.input}
-                    placeholder={institutionPlaceholder}
-                    value={institution}
-                    onChange={e => setInstitution(e.target.value)}
-                  />
-                ) : (
-                  <select
-                    className={styles.input}
-                    value={institution}
-                    onChange={e => setInstitution(e.target.value)}
-                  >
-                    <option value="">Select an institution</option>
-                    {INSTITUTIONS.map(i => (
-                      <option key={i.walletAddress} value={i.name}>
-                        {i.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
+                <label className={styles.label}>Issuing institution</label>
+                <select
+                  className={styles.input}
+                  value={institution}
+                  onChange={e => setInstitution(e.target.value)}
+                >
+                  <option value="">Select an institution</option>
+                  {INSTITUTIONS.map(i => (
+                    <option key={i.walletAddress} value={i.name}>
+                      {i.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -396,23 +371,7 @@ export function IssuanceModal({ isOpen, onClose }: Props) {
             </div>
 
             <div className={styles.field}>
-              <label className={styles.label}>Type</label>
-              <select
-                className={styles.input}
-                value={credType}
-                onChange={e => {
-                  setCredType(e.target.value as CredentialType);
-                  setInstitution('');
-                }}
-              >
-                <option value="academic">🎓 Academic</option>
-                <option value="certification">📜 Certification</option>
-                <option value="work">💼 Work Experience</option>
-              </select>
-            </div>
-
-            <div className={styles.field}>
-              <label className={styles.label}>{dateLabel}</label>
+              <label className={styles.label}>Issue date</label>
               <DatePickerPopover value={issueDate} onChange={setIssueDate} />
             </div>
 
